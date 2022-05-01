@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:paid_vacation_manager/acquisition_page.dart';
 import 'package:paid_vacation_manager/add_page.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_info.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_manager.dart';
 import 'package:paid_vacation_manager/editing_page.dart';
+import 'package:paid_vacation_manager/utility/ad_banner.dart';
 import 'package:paid_vacation_manager/utility/local_storage_manager.dart';
 
 import 'enum/am_pm.dart';
@@ -20,6 +22,7 @@ class DisplayPage extends StatefulWidget {
 
 class DisplayPageState extends State<DisplayPage> {
   late PaidVacationInfo? _displayInfo;
+  static const _bannerPeriod = 5; // 何件に1件表示するか
 
   @override
   void initState() {
@@ -299,6 +302,8 @@ class DisplayPageState extends State<DisplayPage> {
           background: Container(color: Theme.of(context).errorColor,),
           child: Column(
             children: [
+              if (index == 0 || index % _bannerPeriod == 0)
+                const AdBanner(adSize: AdSize.fullBanner),
               ListTile(
                 title: Text('${date.year}'
                     '/${date.month.toString().padLeft(2, '0')}'

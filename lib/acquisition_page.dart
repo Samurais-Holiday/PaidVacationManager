@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_info.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_manager.dart';
 import 'package:paid_vacation_manager/display_page.dart';
 import 'package:paid_vacation_manager/enum/am_pm.dart';
+import 'package:paid_vacation_manager/utility/ad_banner.dart';
 import 'package:paid_vacation_manager/utility/date_times.dart';
 import 'package:paid_vacation_manager/utility/error_dialog.dart';
 import 'package:paid_vacation_manager/utility/lists.dart';
@@ -89,28 +91,32 @@ class AcquisitionPageState extends State<AcquisitionPage> {
       appBar: AppBar(
         title: widget.isEditingMode ? const Text('取得内容の修正') : const Text('有給の取得'),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            margin: const EdgeInsets.all(10),
-            child: _dateForm(),
-          ),
-          _oneDayOrHalfDayButton(),
-          if (_isHalfDay)
-            Container(margin: const EdgeInsets.only(left: 50, right: 50), height: 1.5, color: Colors.black26,),
-          if (_isHalfDay)
-            _amOrPmButton(),
-          Container(
-            margin: const EdgeInsets.only(left: 30, top: 10, right: 30, bottom: 10),
-            child: _inputReasonForm(),
-          ),
-          Container(
-            margin: const EdgeInsets.all(30),
-            child: _navigatePageButton(),
-          ),
-        ],
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const AdBanner(adSize: AdSize.fullBanner),
+            Container(
+              margin: const EdgeInsets.only(left: 10, top: 50, right: 10, bottom: 10),
+              child: _dateForm(),
+            ),
+            _oneDayOrHalfDayButton(),
+            if (_isHalfDay)
+              Container(margin: const EdgeInsets.only(left: 50, right: 50), height: 1.5, color: Colors.black26,),
+            if (_isHalfDay)
+              _amOrPmButton(),
+            Container(
+              margin: const EdgeInsets.only(left: 30, top: 10, right: 30, bottom: 10),
+              child: _inputReasonForm(),
+            ),
+            Container(
+              margin: const EdgeInsets.all(30),
+              child: _navigatePageButton(),
+            ),
+          ],
+        ),
       ),
+
     );
   }
 

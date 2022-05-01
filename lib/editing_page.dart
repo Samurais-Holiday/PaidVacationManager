@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:paid_vacation_manager/data/given_days_info.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_manager.dart';
 import 'package:paid_vacation_manager/display_page.dart';
+import 'package:paid_vacation_manager/utility/ad_banner.dart';
 import 'package:paid_vacation_manager/utility/date_times.dart';
 import 'package:paid_vacation_manager/utility/error_dialog.dart';
 import 'package:paid_vacation_manager/utility/lists.dart';
@@ -40,11 +42,13 @@ class EditingPageState extends State<EditingPage> {
       appBar: AppBar(
         title: const Text('付与内容の修正'),
       ),
-      body: Column(
+      body: SingleChildScrollView(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const AdBanner(adSize: AdSize.fullBanner),
             Container(
-              margin: const EdgeInsets.only(left: 30, top: 10, right: 30, bottom: 10),
+              margin: const EdgeInsets.only(left: 30, top: 30, right: 30, bottom: 10),
               child: _inputGivenDaysForm(),
             ),
             Container(
@@ -61,12 +65,13 @@ class EditingPageState extends State<EditingPage> {
               ],
             ),
             Container(
-              margin: const EdgeInsets.only(top: 40),
+              margin: const EdgeInsets.only(top: 40, bottom: 40),
               child: _buttons(),
             )
 
           ],
         ),
+      ),
     );
   }
 

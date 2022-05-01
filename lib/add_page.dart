@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:paid_vacation_manager/data/given_days_info.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_info.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_manager.dart';
 import 'package:paid_vacation_manager/display_page.dart';
+import 'package:paid_vacation_manager/utility/ad_banner.dart';
 import 'package:paid_vacation_manager/utility/date_times.dart';
 import 'package:paid_vacation_manager/utility/error_dialog.dart';
 import 'package:paid_vacation_manager/utility/lists.dart';
@@ -36,11 +38,13 @@ class AddPageState extends State<AddPage> {
       appBar: AppBar(
         title: Text(widget.isCarriedOverDaysMode ? '繰り越し日数の登録' : '付与日数の新規登録'),
       ),
-      body: Column(
+      body: SingleChildScrollView(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const AdBanner(adSize: AdSize.fullBanner),
             Container(
-              margin: const EdgeInsets.only(left: 30, top: 10, right: 30, bottom: 20),
+              margin: const EdgeInsets.only(left: 30, top: 30, right: 30, bottom: 20),
               child: _inputGivenDaysForm(),
             ),
             Container(
@@ -52,11 +56,12 @@ class AddPageState extends State<AddPage> {
               child: _inputLapseDateForm(),
             ),
             Container(
-              margin: const EdgeInsets.all(20),
+              margin: const EdgeInsets.all(30),
               child: _registrationButton(),
             )
           ],
-        )
+        ),
+      ),
     );
   }
 
@@ -268,7 +273,7 @@ class AddPageState extends State<AddPage> {
           // 入力が正しければ確認ダイアログを表示する
           _confirmationDialog(givenDays: givenDays);
         },
-        child: Text('登録', style: Theme.of(context).textTheme.headline6?.copyWith(color: Colors.white),)
+        child: Text('登録', style: Theme.of(context).textTheme.headline5?.copyWith(color: Colors.white),)
     );
   }
 
