@@ -8,6 +8,7 @@ import 'package:paid_vacation_manager/editing_page.dart';
 import 'package:paid_vacation_manager/utility/ad_banner.dart';
 import 'package:paid_vacation_manager/utility/ad_interstitial.dart';
 import 'package:paid_vacation_manager/utility/local_storage_manager.dart';
+import 'package:paid_vacation_manager/utility/url_manager.dart';
 
 import 'enum/am_pm.dart';
 
@@ -49,24 +50,7 @@ class _DisplayPageState extends State<DisplayPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).backgroundColor,
-      drawer: Drawer(
-        backgroundColor: Theme.of(context).primaryColor,
-        child: ListView(
-          children: [
-            ListTile(
-                leading: const Icon(Icons.add, color: Colors.white, ),
-                title: Text('付与日数の新規追加', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => AddPage(manager: widget.manager))
-                  );
-                }
-            ),
-          ],
-        ),
-      ),
+      drawer: _drawer(),
       appBar: AppBar(
         title: const Text('有給情報'),
       ),
@@ -90,6 +74,34 @@ class _DisplayPageState extends State<DisplayPage> {
       floatingActionButton: _acquisitionButton(),
     );
   }
+
+  /// ドロワー(ハンバーガー押下時)の表示内容
+  Widget _drawer() {
+    return Drawer(
+      backgroundColor: Theme.of(context).primaryColor,
+      child: ListView(
+        children: [
+          ListTile(
+              leading: const Icon(Icons.add, color: Colors.white, ),
+              title: Text('付与日数の新規追加', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => AddPage(manager: widget.manager))
+                );
+              }
+          ),
+          ListTile(
+            leading: const Icon(Icons.link, color: Colors.white,),
+            title: Text('プライバシーポリシー', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),),
+            onTap: UrlManager.launchPolicy,
+          ),
+        ],
+      ),
+    );
+  }
+
 
   /// 付与日数データの表示
   Widget _showGivenDaysInfo() {
