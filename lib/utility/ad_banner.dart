@@ -6,8 +6,9 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 /// AdMobのバナーを表示するクラス
 class AdBanner extends StatefulWidget {
-  const AdBanner({Key? key, required this.adSize}) : super(key: key);
+  const AdBanner({Key? key, required this.adSize, this.backgroundColor}) : super(key: key);
   final AdSize adSize;
+  final Color? backgroundColor;
 
   @override
   State<StatefulWidget> createState() => _AdBannerState();
@@ -25,7 +26,7 @@ class _AdBannerState extends State<AdBanner> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Theme.of(context).primaryColor,
+      color: widget.backgroundColor ?? Theme.of(context).backgroundColor,
       width: _banner.size.width.toDouble(),
       height: _banner.size.height.toDouble(),
       child: AdWidget(ad: _banner),
@@ -51,7 +52,7 @@ class _AdBannerState extends State<AdBanner> {
     )..load();
   }
 
-  String get _unitId {
+  static String get _unitId {
     if (kDebugMode) {
       // テスト用ID
       return Platform.isAndroid

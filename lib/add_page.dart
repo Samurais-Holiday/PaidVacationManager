@@ -18,10 +18,10 @@ class AddPage extends StatefulWidget {
   final bool isCarriedOverDaysMode;
 
   @override
-  State<StatefulWidget> createState() => AddPageState();
+  State<StatefulWidget> createState() => _AddPageState();
 }
 
-class AddPageState extends State<AddPage> {
+class _AddPageState extends State<AddPage> {
   static const double _menuMaxHeight = 450; // ドロップダウンの高さ
   final _givenDaysController = TextEditingController();
   var _givenYear = DateTime.now().year;

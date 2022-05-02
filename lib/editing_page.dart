@@ -17,10 +17,10 @@ class EditingPage extends StatefulWidget {
   final DateTime givenDate;
 
   @override
-  State<StatefulWidget> createState() => EditingPageState();
+  State<StatefulWidget> createState() => _EditingPageState();
 }
 
-class EditingPageState extends State<EditingPage> {
+class _EditingPageState extends State<EditingPage> {
   static const double _menuMaxHeight = 450;
   late TextEditingController _givenDaysController;
   late int _lapseYear;

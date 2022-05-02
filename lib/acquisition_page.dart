@@ -29,10 +29,10 @@ class AcquisitionPage extends StatefulWidget {
   final bool isEditingMode;
 
   @override
-  State<StatefulWidget> createState() => AcquisitionPageState();
+  State<StatefulWidget> createState() => _AcquisitionPageState();
 }
 
-class AcquisitionPageState extends State<AcquisitionPage> {
+class _AcquisitionPageState extends State<AcquisitionPage> {
   static const double _menuMaxHeight = 450;
   // initializeMember で初期化を行う
   late PaidVacationInfo? _editingInfo;

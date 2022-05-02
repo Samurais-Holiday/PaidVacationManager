@@ -6,6 +6,7 @@ import 'package:paid_vacation_manager/data/paid_vacation_info.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_manager.dart';
 import 'package:paid_vacation_manager/editing_page.dart';
 import 'package:paid_vacation_manager/utility/ad_banner.dart';
+import 'package:paid_vacation_manager/utility/ad_interstitial.dart';
 import 'package:paid_vacation_manager/utility/local_storage_manager.dart';
 
 import 'enum/am_pm.dart';
@@ -17,12 +18,12 @@ class DisplayPage extends StatefulWidget {
   final PaidVacationManager manager;
   final DateTime? givenDateToDisplay;
   @override
-  State<StatefulWidget> createState() => DisplayPageState();
+  State<StatefulWidget> createState() => _DisplayPageState();
 }
 
-class DisplayPageState extends State<DisplayPage> {
+class _DisplayPageState extends State<DisplayPage> {
   late PaidVacationInfo? _displayInfo;
-  static const _bannerPeriod = 5; // 何件に1件表示するか
+  static const _bannerPeriod = 4; // バナーの表示頻度
 
   @override
   void initState() {
@@ -40,6 +41,8 @@ class DisplayPageState extends State<DisplayPage> {
               (route) => false);
       return;
     }
+    // 広告を表示
+    AdInterstitial.instance.show();
   }
 
   @override
@@ -303,7 +306,7 @@ class DisplayPageState extends State<DisplayPage> {
           child: Column(
             children: [
               if (index == 0 || index % _bannerPeriod == 0)
-                const AdBanner(adSize: AdSize.fullBanner),
+                AdBanner(adSize: AdSize.fullBanner, backgroundColor: Theme.of(context).primaryColor,),
               ListTile(
                 title: Text('${date.year}'
                     '/${date.month.toString().padLeft(2, '0')}'

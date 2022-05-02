@@ -10,10 +10,10 @@ class TopPage extends StatefulWidget {
   const TopPage({Key? key}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => TopPageState();
+  State<StatefulWidget> createState() => _TopPageState();
 }
 
-class TopPageState extends State<TopPage> {
+class _TopPageState extends State<TopPage> {
 
   @override
   void initState() {
