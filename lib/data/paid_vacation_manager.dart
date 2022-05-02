@@ -136,7 +136,7 @@ class PaidVacationManager {
     PaidVacationInfo? nextInfo;
     for (var currentInfo in _paidVacationInfoList) {
       if (info.givenDate.isBefore(currentInfo.givenDate)
-          && (nextInfo == null || currentInfo.givenDate.isBefore(info.givenDate))) {
+          && (nextInfo == null || currentInfo.givenDate.isBefore(nextInfo.givenDate))) {
         nextInfo = currentInfo;
       }
     }
