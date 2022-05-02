@@ -139,6 +139,7 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
             }
             setState(() {
               _acquisitionYear = newYear;
+              _invalidGivenDateThenReset();
             });
           },
         ),
@@ -161,6 +162,7 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
             }
             setState(() {
               _acquisitionMonth = newMonth;
+              _invalidGivenDateThenReset();
             });
           },
         ),
@@ -183,12 +185,23 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
             }
             setState(() {
               _acquisitionDay = newDay;
+              _invalidGivenDateThenReset();
             });
           },
         ),
         Text('日',  style: Theme.of(context).textTheme.subtitle1,),
       ],
     );
+  }
+
+  /// 取得日の入力内容をチェックし、有効期間外になる場合は失効日にセットする
+  void _invalidGivenDateThenReset() {
+    // 取得日が失効日より後になる場合
+    if (_editingInfo!.lapseDate.isBefore(DateTime(_acquisitionYear, _acquisitionMonth, _acquisitionDay))) {
+      _acquisitionYear = _editingInfo!.lapseDate.year;
+      _acquisitionMonth = _editingInfo!.lapseDate.month;
+      _acquisitionDay = _editingInfo!.lapseDate.day;
+    }
   }
 
   /// 全休/半休 ラジオボタン
