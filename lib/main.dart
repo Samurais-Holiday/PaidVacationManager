@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -6,8 +7,9 @@ import 'package:paid_vacation_manager/top_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  MobileAds.instance.initialize();
+  MobileAds.instance.initialize(); // AdMob
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]); // 画面の向きを固定(起動時の速度を重視するため同期しない)
+  Firebase.initializeApp();  // Firebase
   runApp(const MyApp());
 }
 
