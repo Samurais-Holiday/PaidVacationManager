@@ -7,8 +7,9 @@ import 'package:paid_vacation_manager/top_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // 各初期化処理(ユーザビリティを重視するため、処理は非同期で行う)
   MobileAds.instance.initialize(); // AdMob
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]); // 画面の向きを固定(起動時の速度を重視するため同期しない)
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]); // 画面の向きを固定
   Firebase.initializeApp();  // Firebase
   runApp(const MyApp());
 }

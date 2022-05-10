@@ -60,18 +60,6 @@ void main() {
     expect(info.remainingDays, givenDays - 1.5);
   });
 
-  test('isValidNow_明日失効日', () {
-    final givenDate = DateTime(today.year - 2, today.month, today.day);
-    final info = PaidVacationInfo(GivenDaysInfo(20, givenDate, tomorrow));
-    expect(info.isValidNow(), true);
-  });
-
-  test('isValidNow_今日失効日', () {
-    final givenDate = DateTime(today.year - 2, today.month, today.day);
-    final info = PaidVacationInfo(GivenDaysInfo(20, givenDate, today));
-    expect(info.isValidNow(), false);
-  });
-
   test('acquisitionList', () {
     final info = PaidVacationInfo(GivenDaysInfo(10, today));
     info.acquisitionVacation(date: tomorrow, amPm: AmPm.am, reason: '半休_明日午前');
@@ -79,7 +67,7 @@ void main() {
     info.acquisitionVacation(date: tomorrow, amPm: AmPm.pm, reason: '半休_明日午後');
     final expectedReason = <String>['全休_今日', '半休_明日午前', '半休_明日午後'];
     var i = 0;
-    for (var reason in info.sortedAcquisitionList().values) {
+    for (var reason in info.sortedAcquisitionDate().values) {
       expect(reason, expectedReason[i]);
       i++;
     }

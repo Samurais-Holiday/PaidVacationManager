@@ -11,12 +11,13 @@ class AcquisitionHalfInfo {
   final Map<Pair<DateTime, AmPm>, String> _acquisitionHalfDays = <Pair<DateTime, AmPm>, String>{};
   Map<Pair<DateTime, AmPm>, String> get acquisitionList => _acquisitionHalfDays;
 
-  /// 半休取得日クラスを表す文字列
-  static const string = 'AcquisitionHalfInfo';
-
   /// データ追加
   /// 既に存在する場合は設定しない
-  bool add({required DateTime date, required AmPm amPm, String reason = ''}) {
+  bool add({
+      required final DateTime date,
+      required final AmPm amPm,
+      final String reason = '',}) {
+
     if (_acquisitionHalfDays.containsKey(Pair(date, amPm))) {
       log('${add.toString()}\n既に取得しています (取得日: ${date.toString()})');
       return false;

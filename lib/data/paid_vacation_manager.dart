@@ -71,34 +71,38 @@ class PaidVacationManager {
     return info.setLapseDate(value);
   }
 
-  /// 指定したタイプの有給を取得する
+  /// 有給を取得する
   /// 半休の場合は amPm を指定すること
-  bool acquisitionVacation({required DateTime givenDate, required DateTime acquisitionDate, AmPm? amPm, String reason = ''}) {
+  bool acquisitionVacation({
+      required final DateTime givenDate,
+      required final DateTime acquisitionDate,
+      final AmPm? amPm,
+      final String reason = '',}) {
     // 何れかの PaidVacationInfo に取得日が重複するのデータがあった場合は設定しない
     for (var paidVacationInfo in _paidVacationInfoList) {
       // 設定先の PaidVacationInfo は飛ばす
       if (paidVacationInfo.givenDate == givenDate) {
         continue;
       }
-      final keys = paidVacationInfo.sortedAcquisitionList().keys;
+      final keys = paidVacationInfo.sortedAcquisitionDate().keys;
       if (amPm == null) {
         // 全休の場合は付与日が一致で設定失敗
         final guard = Pair(DateTime(0), null); // 番兵
         if (keys.firstWhere((key) => key.first == acquisitionDate, orElse: () => guard) != guard) {
-          log('${acquisitionVacation.toString()}\n取得失敗 (取得日が重複しているデータがあります 取得日: ${acquisitionDate.toString()})');
+          log('$acquisitionVacation\n取得失敗 (取得日が重複しているデータがあります 取得日: $acquisitionDate)');
           return false;
         }
       } else {
         // 半休の場合は午前/午後まで一致で設定失敗
         if (keys.contains(Pair(acquisitionDate, amPm))) {
-          log('${acquisitionVacation.toString()}\n取得失敗 (取得日が重複しているデータがあります 取得日: ${acquisitionDate.toString()} (${amPm.toString()}))');
+          log('$acquisitionVacation\n取得失敗 (取得日が重複しているデータがあります 取得日: $acquisitionDate ($amPm))');
           return false;
         }
       }
     }
     final targetInfo = paidVacationInfo(givenDate);
     if (targetInfo == null) {
-      log('${acquisitionVacation.toString()}\n取得失敗 (設定先のデータが見つかりませんでした)');
+      log('$acquisitionVacation\n取得失敗 (設定先のデータが見つかりませんでした)');
       return false;
     }
     return targetInfo.acquisitionVacation(date: acquisitionDate, amPm: amPm, reason: reason);

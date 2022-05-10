@@ -10,7 +10,4 @@ class GivenDaysInfo {
   /// コンストラクタ
   GivenDaysInfo(this.givenDays, this.givenDate, [DateTime? lapseDate]) :
       lapseDate = lapseDate ?? DateTime(givenDate.year + 2, givenDate.month, givenDate.day);
-
-  /// 本クラスを表す文字列取得
-  static const string = 'GivenDaysInfo';
 }

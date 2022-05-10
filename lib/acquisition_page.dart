@@ -1,14 +1,20 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_info.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_manager.dart';
 import 'package:paid_vacation_manager/display_page.dart';
 import 'package:paid_vacation_manager/enum/am_pm.dart';
-import 'package:paid_vacation_manager/utility/ad_banner.dart';
+import 'package:paid_vacation_manager/utility/api/ad_banner.dart';
+import 'package:paid_vacation_manager/utility/api/google_calendar.dart';
+import 'package:paid_vacation_manager/utility/configure.dart';
 import 'package:paid_vacation_manager/utility/date_times.dart';
 import 'package:paid_vacation_manager/utility/error_dialog.dart';
+import 'package:paid_vacation_manager/utility/information_dialog.dart';
 import 'package:paid_vacation_manager/utility/lists.dart';
-import 'package:paid_vacation_manager/utility/local_storage_manager.dart';
+import 'package:paid_vacation_manager/utility/api/local_storage_manager.dart';
+import 'package:uuid/uuid.dart';
 
 /// 有給の取得情報を登録するページ
 /// 編集モードのときはinitialDateの指定が必須
@@ -318,8 +324,8 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
             widget.isEditingMode ? '保存' : '登録',
             style: Theme.of(context).textTheme.headline6?.copyWith(color: Colors.white),
           ),
-          onPressed: () {
-            var isSuccess = false;
+          onPressed: () async {
+            var isSuccess = true;
             final newDate = DateTime(_acquisitionYear, _acquisitionMonth, _acquisitionDay);
             final reason = _reasonController.value.text;
             if (widget.isEditingMode) {
@@ -327,7 +333,7 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
               isSuccess = _editingInfo!.updateAcquisitionInfo(
                   prevDate: widget.initialDate!, newDate: newDate,
                   prevAmPm: widget.initialAmPm, newAmPm: _isHalfDay ? _amPm : null,
-                  reason: reason);
+                  newReason: reason);
               if (isSuccess) {
                 // 成功したらストレージの内容も更新する
                 LocalStorageManager.updateAcquisitionInfo(
@@ -335,6 +341,26 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
                     prevDate: widget.initialDate!, newDate: newDate,
                     prevAmPm: widget.initialAmPm, newAmPm: _isHalfDay ? _amPm : null,
                     reason: reason);
+                // 同期設定がONの場合は、Googleカレンダーの予定を更新する
+                if (Configure.instance.isSyncGoogleCalendar) {
+                  // デバイスにイベントIDが保存してある場合はそのIDを使用する
+                  final eventId = await LocalStorageManager.readGoogleCalendarEventId(date: widget.initialDate!, amPm: widget.initialAmPm);
+                  if (eventId != null) {
+                    GoogleCalendar.updateEvent(
+                        eventId: eventId,
+                        newDate: newDate,
+                        newTitle: '有給取得日${_isHalfDay
+                            ? _amPm == AmPm.am
+                                ? '（午前）'
+                                : '（午後）'
+                            : ''}',
+                        description: reason,
+                    );
+                  } else {
+                    // デバイスにIDがない場合はイベントの新規登録をする
+                    await _createCalendarEventAndStoreId(date: newDate, reason: reason);
+                  }
+                }
               }
             } else {
               // 追加モード
@@ -342,14 +368,21 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
                   givenDate: widget.givenDate,
                   acquisitionDate: newDate,
                   amPm: _isHalfDay ? _amPm : null,
-                  reason: reason);
+                  reason: reason,
+              );
               if (isSuccess) {
                 // 成功したらストレージにも書き込む
                 LocalStorageManager.writeAcquisitionInfo(
                     givenDate: _editingInfo!.givenDate,
                     acquisitionDate: newDate,
                     amPm: _isHalfDay ? _amPm : null,
-                    reason: reason);
+                    reason: reason,
+                );
+                // 同期設定がしてある場合はGoogleカレンダーに予定を追加する
+                if (Configure.instance.isSyncGoogleCalendar) {
+                  await _createCalendarEventAndStoreId(date: newDate, reason: reason);
+                }
+
               }
             }
             // 成功していれば表示画面へ遷移する
@@ -374,5 +407,32 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
         )
       ],
     );
+  }
+
+  /// Googleカレンダーへイベントの登録及び、デバイスにイベントIDを保存する
+  Future _createCalendarEventAndStoreId({
+      required final DateTime date,
+      final String reason = '',
+  }) async {
+    final eventId = const Uuid().v4().replaceAll('-', ''); // Googleカレンダーへの登録に必要
+    await GoogleCalendar.createEvent(
+      eventId: eventId,
+      date: date,
+      title: '有給取得日${_isHalfDay
+          ? _amPm == AmPm.am
+              ? '（午前）'
+              : '（午後）'
+          : ''}',
+      description: reason,
+    ).then((value) async {
+      if (value) {
+        // 成功したらストレージにイベントIDを保存する
+        LocalStorageManager.writeGoogleCalendarEventId(eventId: eventId, date: date, amPm: _isHalfDay ? _amPm : null);
+        await InformationDialog.show(context: context, info: 'Googleカレンダーにイベントを追加しました');
+      } else {
+        log('Googleカレンダーに予定の追加失敗(ID: $eventId)');
+        await ErrorDialog.show(context: context, detail: 'Googleカレンダーへのイベントの追加に失敗しました');
+      }
+    });
   }
 }

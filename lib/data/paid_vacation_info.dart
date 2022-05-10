@@ -11,9 +11,9 @@ import 'package:paid_vacation_manager/enum/am_pm.dart';
 class PaidVacationInfo {
   /// 付与日数データ
   late final GivenDaysInfo _givenDaysInfo;
-  /// 有給取得日データ(key: 取得日, value: 取得理由)
+  /// 有給取得日データ
   final _acquisitionDateInfo = AcquisitionOneDayInfo();
-  /// 半休取得日データ(key: 取得日・AM/PM, value: 取得理由)
+  /// 半休取得日データ
   final _acquisitionHalfInfo = AcquisitionHalfInfo();
 
   /// コンストラクタ
@@ -55,7 +55,8 @@ class PaidVacationInfo {
 
 
   /// 有給取得日リスト取得(日付が古い順)
-  Map<Pair<DateTime, AmPm?>, String> sortedAcquisitionList() {
+  /// key: 取得日・AM/PM, value: 取得理由
+  Map<Pair<DateTime, AmPm?>, String> sortedAcquisitionDate() {
     final returnList = SplayTreeMap<Pair<DateTime, AmPm?>, String>((a, b) {
       final result = a.first.compareTo(b.first);
       if (result == 0) {
@@ -85,28 +86,35 @@ class PaidVacationInfo {
 
   /// 有給取得
   /// 半休の場合は amPm を指定すること
-  bool acquisitionVacation({required DateTime date, AmPm? amPm, String reason = ''})
-      => (amPm == null)
-          ? _acquisitionDay(date, reason)
-          : _acquisitionHalf(date, amPm, reason);
+  /// 有効期間外の場合は設定しない
+  bool acquisitionVacation({
+      required final DateTime date,
+      final String? eventId,
+      final AmPm? amPm,
+      final String reason = ''}) {
+
+    // 有効期間内か
+    if (!isValidDay(date)) {
+      log('$acquisitionVacation\n全休取得失敗 (有効期間外を取得しようとしています '
+          '(actual: $date, expected: $givenDate ~ $lapseDate))');
+      return false;
+    }
+    // GoogleカレンダーイベントIDの保存
+    return amPm == null
+        ? _acquisitionDay(date: date, reason: reason)
+        : _acquisitionHalf(date: date, amPm: amPm, reason: reason);
+  }
 
   /// 有給取得(全休)
   /// 下記の場合は設定しない
   ///   ・半休に同じ日付のデータがある
-  ///   ・有効期間外
   ///   ・残り日数が足りない
-  bool _acquisitionDay(DateTime date, [String reason = '']) {
+  bool _acquisitionDay({required final DateTime date, final String reason = ''}) {
     // 半休の取得情報に取得日が重なるデータがあるか
     final keys = _acquisitionHalfInfo.acquisitionList.keys;
     final guard = Pair(DateTime(0), AmPm.am); // 番兵
     if (keys.firstWhere((key) => key.first == date, orElse: () => guard) != guard) {
       log('${_acquisitionDay.toString()}\n全休取得失敗 (半休に同じ日付のデータが存在します (${date.toString()}))');
-      return false;
-    }
-    // 有効期間内か
-    if (!isValidDay(date)) {
-      log('${_acquisitionDay.toString()}\n全休取得失敗 (有効期間外を取得しようとしています '
-          '(actual: ${date.toString()}, expected: ${givenDate.toString()} ~ ${lapseDate.toString()}))');
       return false;
     }
     // 残り日数が足りるか
@@ -120,18 +128,11 @@ class PaidVacationInfo {
   /// 半休取得
   /// 下記の場合は設定しない
   ///   ・半休に同じ日付のデータがある
-  ///   ・有効期間外
   ///   ・残り日数が足りない
-  bool _acquisitionHalf(DateTime date, AmPm amPm, [String reason = '']) {
+  bool _acquisitionHalf({required final DateTime date, required final AmPm amPm, final String reason = ''}) {
     // 全休の取得情報に取得日が重なるデータがあるか
     if (_acquisitionDateInfo.acquisitionList.keys.contains(date)) {
       log('${_acquisitionHalf.toString()}\n半休取得失敗 (全休に取得日が重なるデータがあります (取得日: ${date.toString()}))');
-      return false;
-    }
-    // 有効期間内か
-    if (!isValidDay(date)) {
-      log('${_acquisitionDay.toString()}\n全休取得失敗 (有効期間外を取得しようとしています '
-          '(actual: ${date.toString()}, expected: ${givenDate.toString()} ~ ${lapseDate.toString()}))');
       return false;
     }
     // 残り日数が足りるか
@@ -144,8 +145,9 @@ class PaidVacationInfo {
 
   /// 取得日上書き
   bool updateAcquisitionInfo({
-      required DateTime prevDate, required DateTime newDate,
-      required AmPm? prevAmPm, required AmPm? newAmPm, String reason = ''}) {
+      required final DateTime prevDate, required final DateTime newDate,
+      required final AmPm? prevAmPm, required final AmPm? newAmPm,
+      final String newReason = ''}) {
 
     log('${updateAcquisitionInfo.toString()}\n取得データ更新開始');
     // 前回の理由を保持しておく
@@ -160,22 +162,21 @@ class PaidVacationInfo {
     deleteAcquisitionInfo(prevDate, prevAmPm);
     // 新しいデータを追加
     final isSuccess = (newAmPm == null)
-        ? _acquisitionDay(newDate, reason)
-        : _acquisitionHalf(newDate, newAmPm, reason);
-    if (isSuccess) {
-      log('${updateAcquisitionInfo.toString()}\n取得データ更新成功 (取得日: ${newDate.toString()} (${newAmPm.toString()}))');
-      return true;
+        ? _acquisitionDay(date: newDate, reason: newReason)
+        : _acquisitionHalf(date: newDate, amPm: newAmPm, reason: newReason);
+    if (!isSuccess) {
+      // 設定できなかった場合は元の設定に戻す
+      log('$updateAcquisitionInfo\n取得情報の更新失敗 再設定します (取得日: $newDate ($newAmPm))');
+      if (prevAmPm == null) {
+        _acquisitionDateInfo.add(date: prevDate, reason: prevReason);
+      } else {
+        _acquisitionHalfInfo.add(date: prevDate, amPm: prevAmPm, reason: prevReason);
+      }
+      return false;
     }
-    // 設定できなかった場合は元の設定に戻す
-    log('${updateAcquisitionInfo.toString()}\n取得情報の更新失敗 再設定します (取得日: ${newDate.toString()} (${newAmPm.toString()}))');
-    if (prevAmPm == null) {
-      _acquisitionDateInfo.add(date: prevDate, reason: prevReason);
-    } else {
-      _acquisitionHalfInfo.add(date: prevDate, amPm: prevAmPm, reason: prevReason);
-    }
-    return false;
+    log('$updateAcquisitionInfo\n取得データ更新成功 (取得日: $newDate ($newAmPm))');
+    return true;
   }
-
 
   /// 消化日数取得
   double get acquisitionTotal => _acquisitionDateInfo.acquisitionDays + _acquisitionHalfInfo.acquisitionDays;
@@ -185,11 +186,6 @@ class PaidVacationInfo {
   int get acquisitionHalfCount => _acquisitionHalfInfo.acquisitionList.length;
   /// 残り日数取得
   double get remainingDays => _givenDaysInfo.givenDays - acquisitionTotal;
-
-  /// 現在有効なデータか
-  bool isValidNow() {
-    return isValidDay(DateTime.now());
-  }
 
   /// 指定した日が有効期間内か
   bool isValidDay(DateTime date) {

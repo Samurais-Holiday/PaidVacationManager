@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 /// エラーダイアログを表示するクラス
 class ErrorDialog {
-  static void show({required BuildContext context, required String detail}) {
-    showDialog(
+  static Future show({required BuildContext context, required String detail}) async {
+    await showDialog(
         context: context,
         builder: (context) {
           return AlertDialog(

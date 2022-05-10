@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:paid_vacation_manager/add_page.dart';
 import 'package:paid_vacation_manager/display_page.dart';
-import 'package:paid_vacation_manager/utility/local_storage_manager.dart';
+import 'package:paid_vacation_manager/utility/api/local_storage_manager.dart';
 
 import 'data/paid_vacation_manager.dart';
 

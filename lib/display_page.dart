@@ -1,14 +1,19 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:paid_vacation_manager/acquisition_page.dart';
 import 'package:paid_vacation_manager/add_page.dart';
+import 'package:paid_vacation_manager/utility/api/google_calendar.dart';
+import 'package:paid_vacation_manager/utility/api/google_sign_in_manager.dart';
+import 'package:paid_vacation_manager/utility/configure.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_info.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_manager.dart';
 import 'package:paid_vacation_manager/editing_page.dart';
-import 'package:paid_vacation_manager/utility/ad_banner.dart';
-import 'package:paid_vacation_manager/utility/ad_interstitial.dart';
-import 'package:paid_vacation_manager/utility/local_storage_manager.dart';
-import 'package:paid_vacation_manager/utility/url_manager.dart';
+import 'package:paid_vacation_manager/utility/api/ad_banner.dart';
+import 'package:paid_vacation_manager/utility/api/ad_interstitial.dart';
+import 'package:paid_vacation_manager/utility/api/local_storage_manager.dart';
+import 'package:paid_vacation_manager/utility/api/url_manager.dart';
 
 import 'enum/am_pm.dart';
 
@@ -23,18 +28,17 @@ class DisplayPage extends StatefulWidget {
 }
 
 class _DisplayPageState extends State<DisplayPage> {
-  late PaidVacationInfo? _displayInfo;
   static const _bannerPeriod = 4; // バナーの表示頻度
+  late PaidVacationInfo _displayInfo; // 画面に表示する有給情報
 
   @override
   void initState() {
     super.initState();
     // 最初に画面に表示する有給情報を設定する
-    _displayInfo = (widget.givenDateToDisplay == null)
+    var displayInfo = (widget.givenDateToDisplay == null)
         ? widget.manager.initialDisplayInfo()
         : widget.manager.paidVacationInfo(widget.givenDateToDisplay!);
-    // ここで_displayInfoの非nullableを保証
-    if (_displayInfo == null) {
+    if (displayInfo == null) {
       // 表示するデータがない場合には登録ページへ
       Navigator.pushAndRemoveUntil(
           context,
@@ -42,6 +46,7 @@ class _DisplayPageState extends State<DisplayPage> {
               (route) => false);
       return;
     }
+    _displayInfo = displayInfo;
     // 広告を表示
     AdInterstitial.instance.show();
   }
@@ -92,6 +97,35 @@ class _DisplayPageState extends State<DisplayPage> {
                 );
               }
           ),
+          SwitchListTile(
+            secondary: const Icon(Icons.sync),
+            title: Text('Googleカレンダーと同期', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),),
+            value: Configure.instance.isSyncGoogleCalendar,
+            onChanged: (bool isSync) async {
+              // 値の設定
+              setState(() {
+                Configure.instance.isSyncGoogleCalendar = isSync;
+                LocalStorageManager.writeIsSyncGoogleCalendar(isSync);
+              });
+              if (isSync) {
+                // 同期設定をONにした場合、サインインを試みる
+                if (!await GoogleSignInManager.signInGoogle(scope: [GoogleCalendar.calendarScope])) {
+                  log('ログイン失敗');
+                  // 失敗したら同期設定OFFにする
+                  setState(() {
+                    Configure.instance.isSyncGoogleCalendar = false;
+                    LocalStorageManager.writeIsSyncGoogleCalendar(false);
+                  });
+                }
+              } else {
+                // 同期設定をOFFにした場合
+                // 認証情報を初期化する
+                if (await GoogleSignInManager.isSignedIn()) {
+                  GoogleSignInManager.signOut();
+                }
+              }
+            },
+          ),
           ListTile(
             leading: const Icon(Icons.link, color: Colors.white,),
             title: Text('プライバシーポリシー', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),),
@@ -101,7 +135,6 @@ class _DisplayPageState extends State<DisplayPage> {
       ),
     );
   }
-
 
   /// 付与日数データの表示
   Widget _showGivenDaysInfo() {
@@ -128,12 +161,12 @@ class _DisplayPageState extends State<DisplayPage> {
   /// 有効期間を表示する
   Widget _validPeriodWidget() {
     return Text(
-      '${_displayInfo!.givenDate.year}'
-          '/${_displayInfo!.givenDate.month.toString().padLeft(2, '0')}'
-          '/${_displayInfo!.givenDate.day.toString().padLeft(2, '0')}'
-          ' ~ ${_displayInfo!.lapseDate.year}'
-          '/${_displayInfo!.lapseDate.month.toString().padLeft(2, '0')}'
-          '/${_displayInfo!.lapseDate.day.toString().padLeft(2, '0')}',
+      '${_displayInfo.givenDate.year}'
+          '/${_displayInfo.givenDate.month.toString().padLeft(2, '0')}'
+          '/${_displayInfo.givenDate.day.toString().padLeft(2, '0')}'
+          ' ~ ${_displayInfo.lapseDate.year}'
+          '/${_displayInfo.lapseDate.month.toString().padLeft(2, '0')}'
+          '/${_displayInfo.lapseDate.day.toString().padLeft(2, '0')}',
       style: Theme.of(context).textTheme.headline5,
     );
   }
@@ -145,7 +178,7 @@ class _DisplayPageState extends State<DisplayPage> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text('付与日数: ', style: Theme.of(context).textTheme.headline6,),
-        Text(_displayInfo!.givenDays.toString(), style: Theme.of(context).textTheme.headline4,),
+        Text(_displayInfo.givenDays.toString(), style: Theme.of(context).textTheme.headline4,),
         Text(' 日  ', style: Theme.of(context).textTheme.subtitle1,),
       ],
     );
@@ -158,9 +191,9 @@ class _DisplayPageState extends State<DisplayPage> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text('取得日数: ', style: Theme.of(context).textTheme.headline6,),
-        Text(_displayInfo!.acquisitionTotal.toStringAsFixed(1), style: Theme.of(context).textTheme.headline4,),
+        Text(_displayInfo.acquisitionTotal.toStringAsFixed(1), style: Theme.of(context).textTheme.headline4,),
         Text(' 日  ', style: Theme.of(context).textTheme.subtitle1,),
-        Text('( 全休 ${_displayInfo!.acquisitionDays} 回 / 半休 ${_displayInfo!.acquisitionHalfCount} 回 )', style: Theme.of(context).textTheme.subtitle1,),
+        Text('( 全休 ${_displayInfo.acquisitionDays} 回 / 半休 ${_displayInfo.acquisitionHalfCount} 回 )', style: Theme.of(context).textTheme.subtitle1,),
       ],
     );
   }
@@ -172,7 +205,7 @@ class _DisplayPageState extends State<DisplayPage> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text('残り日数: ', style: Theme.of(context).textTheme.headline6,),
-        Text(_displayInfo!.remainingDays.toStringAsFixed(1), style: Theme.of(context).textTheme.headline4,),
+        Text(_displayInfo.remainingDays.toStringAsFixed(1), style: Theme.of(context).textTheme.headline4,),
         Text(' 日', style: Theme.of(context).textTheme.subtitle1,),
       ],
     );
@@ -185,13 +218,13 @@ class _DisplayPageState extends State<DisplayPage> {
       children: [
         _changeInfoButton(
             label: '前へ',
-            info: widget.manager.backInfo(_displayInfo!),
+            info: widget.manager.backInfo(_displayInfo),
             iconData: Icons.arrow_left),
         _deleteButton(),
         _editingButton(),
         _changeInfoButton(
             label: '次へ',
-            info: widget.manager.nextInfo(_displayInfo!),
+            info: widget.manager.nextInfo(_displayInfo),
             iconData: Icons.arrow_right),
       ],
     );
@@ -219,11 +252,11 @@ class _DisplayPageState extends State<DisplayPage> {
           return AlertDialog(
             title: Text('以下の情報を削除します', style: TextStyle(color: Theme.of(context).errorColor),),
             content: Text(
-                '付与日: ${_displayInfo!.givenDate.year}年 ${_displayInfo!.givenDate.month}月 ${_displayInfo!.givenDate.day}日\n'
-                '失効日: ${_displayInfo!.lapseDate.year}年 ${_displayInfo!.lapseDate.month}月 ${_displayInfo!.lapseDate.day}日\n'
-                '有給付与日数: ${_displayInfo!.givenDays}日\n'
-                '取得日数: ${_displayInfo!.acquisitionTotal}日\n'
-                '残り日数: ${_displayInfo!.remainingDays}日'
+                '付与日: ${_displayInfo.givenDate.year}年 ${_displayInfo.givenDate.month}月 ${_displayInfo.givenDate.day}日\n'
+                '失効日: ${_displayInfo.lapseDate.year}年 ${_displayInfo.lapseDate.month}月 ${_displayInfo.lapseDate.day}日\n'
+                '有給付与日数: ${_displayInfo.givenDays}日\n'
+                '取得日数: ${_displayInfo.acquisitionTotal}日\n'
+                '残り日数: ${_displayInfo.remainingDays}日'
             ),
             actions: [
               TextButton(
@@ -232,13 +265,26 @@ class _DisplayPageState extends State<DisplayPage> {
               ),
               TextButton(
                 child: Text('削除', style: Theme.of(context).textTheme.headline5!.copyWith(color: Theme.of(context).primaryColor),),
-                onPressed: () {
+                onPressed: () async {
                   // 削除
-                  widget.manager.delete(givenDate: _displayInfo!.givenDate);
-                  LocalStorageManager.deletePaidVacationInfo(_displayInfo!);
+                  widget.manager.delete(givenDate: _displayInfo.givenDate);
+                  LocalStorageManager.deletePaidVacationInfo(_displayInfo);
+                  if (Configure.instance.isSyncGoogleCalendar) {
+                    // Googleカレンダーに登録してあるイベントがあれば削除する
+                    _displayInfo.sortedAcquisitionDate().keys.forEach((key) async {
+                      // デバイスにイベントIDが保存してあるか参照する
+                      final eventId = await LocalStorageManager.readGoogleCalendarEventId(date: key.first, amPm: key.last);
+                      if (eventId != null) {
+                        // Googleカレンダーのイベントを削除
+                        GoogleCalendar.deleteEvent(eventId);
+                        // デバイス保存していたイベントIDを削除
+                        LocalStorageManager.deleteGoogleCalendarEventId(date: key.first, amPm: key.last);
+                      }
+                    });
+                  }
                   // 消した後に表示する有給情報を設定
-                  _displayInfo = widget.manager.initialDisplayInfo();
-                  if (_displayInfo == null) {
+                  var displayInfo = widget.manager.initialDisplayInfo();
+                  if (displayInfo == null) {
                     // 表示データがない場合は登録ページへ
                     Navigator.pushAndRemoveUntil(
                         context,
@@ -248,6 +294,7 @@ class _DisplayPageState extends State<DisplayPage> {
                   }
                   // 表示データがある場合は更新
                   setState(() {
+                    _displayInfo = displayInfo;
                     Navigator.pop(context);
                   });
                 },
@@ -263,7 +310,7 @@ class _DisplayPageState extends State<DisplayPage> {
     return ElevatedButton.icon(
       onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (builder) => EditingPage(manager: widget.manager, givenDate: _displayInfo!.givenDate,))
+              MaterialPageRoute(builder: (builder) => EditingPage(manager: widget.manager, givenDate: _displayInfo.givenDate,))
       ),
       label: const Text(''),
       icon: const Icon(Icons.edit),
@@ -294,7 +341,7 @@ class _DisplayPageState extends State<DisplayPage> {
         onPressed: () {
           Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => AcquisitionPage(manager: widget.manager, givenDate: _displayInfo!.givenDate,))
+              MaterialPageRoute(builder: (_) => AcquisitionPage(manager: widget.manager, givenDate: _displayInfo.givenDate,))
           );
         },
         child: Text('休む!', style: Theme.of(context).textTheme.headline6?.copyWith(color: Colors.white),),
@@ -305,7 +352,7 @@ class _DisplayPageState extends State<DisplayPage> {
   /// 取得情報のリストを表示する
   /// Columnの中で使用する場合はFlexibleでくくる必要がある
   Widget _acquisitionList() {
-    final acquisitionList = _displayInfo!.sortedAcquisitionList();
+    final acquisitionList = _displayInfo.sortedAcquisitionDate();
     return ListView.builder(
       itemCount: acquisitionList.length,
       itemBuilder: (BuildContext context, int index) {
@@ -335,7 +382,7 @@ class _DisplayPageState extends State<DisplayPage> {
                       MaterialPageRoute(
                           builder: (_) => AcquisitionPage(
                               manager: widget.manager,
-                              givenDate: _displayInfo!.givenDate,
+                              givenDate: _displayInfo.givenDate,
                               initialDate: date,
                               initialAmPm: amPm,
                               initialReason: reason,
@@ -352,14 +399,24 @@ class _DisplayPageState extends State<DisplayPage> {
               )
             ],
           ),
-          onDismissed: (direction) {
+          onDismissed: (direction) async {
             setState(() {
               widget.manager.deleteAcquisitionInfo(date, amPm);
               LocalStorageManager.deleteAcquisitionInfo(
-                  givenDate: _displayInfo!.givenDate,
+                  givenDate: _displayInfo.givenDate,
                   acquisitionDate: date,
                   amPm: amPm);
             });
+            if (Configure.instance.isSyncGoogleCalendar) {
+              // Googleカレンダーからも削除する
+              final eventId = await LocalStorageManager.readGoogleCalendarEventId(date: date, amPm: amPm);
+              if (eventId == null) {
+                log('Googleカレンダーイベント削除失敗: デバイスにイベントIDが見つかりませんでした (ID: $eventId)');
+                return;
+              }
+              GoogleCalendar.deleteEvent(eventId);
+              LocalStorageManager.deleteGoogleCalendarEventId(date: date, amPm: amPm);
+            }
           },
         );
       },

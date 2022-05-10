@@ -8,12 +8,9 @@ class AcquisitionOneDayInfo {
   final Map<DateTime, String> _acquisitionDaysInfo = <DateTime, String>{};
   Map<DateTime, String> get acquisitionList => _acquisitionDaysInfo;
 
-  /// 取得日データを表す文字列
-  static const string = 'AcquisitionOneDayInfo';
-
   /// 取得日データ追加
   /// 既に存在する場合は設定しない
-  bool add({required DateTime date, String reason = ''}) {
+  bool add({required final DateTime date, final String reason = ''}) {
     if (_acquisitionDaysInfo.containsKey(date)) {
       log('${add.toString()}\n既にデータが存在します (取得日: ${date.toString()})');
       return false;
@@ -24,7 +21,7 @@ class AcquisitionOneDayInfo {
   }
 
   /// 取得日データを上書きする
-  bool upDate({required DateTime date, String reason = ''}) {
+  bool upDate({required final DateTime date, final String reason = ''}) {
     if (!_acquisitionDaysInfo.containsKey(date)) {
       log('${upDate.toString()}\n対象データが存在しません');
       return false;

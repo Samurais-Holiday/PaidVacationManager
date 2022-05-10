@@ -4,11 +4,11 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:paid_vacation_manager/data/given_days_info.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_manager.dart';
 import 'package:paid_vacation_manager/display_page.dart';
-import 'package:paid_vacation_manager/utility/ad_banner.dart';
+import 'package:paid_vacation_manager/utility/api/ad_banner.dart';
 import 'package:paid_vacation_manager/utility/date_times.dart';
 import 'package:paid_vacation_manager/utility/error_dialog.dart';
 import 'package:paid_vacation_manager/utility/lists.dart';
-import 'package:paid_vacation_manager/utility/local_storage_manager.dart';
+import 'package:paid_vacation_manager/utility/api/local_storage_manager.dart';
 
 /// 付与内容の編集を行うページ
 class EditingPage extends StatefulWidget {
