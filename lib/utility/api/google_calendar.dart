@@ -24,7 +24,7 @@ class GoogleCalendar {
     final client = await GoogleSignInManager.authenticatedClient;
     if (client == null) {
       log('$createEvent\nイベント登録失敗: HTTP Client is null');
-      GoogleSignInManager.signOut();
+      GoogleSignInManager.disconnect();
       return false;
     }
     // GoogleカレンダーAPIのインスタンスを生成
@@ -63,7 +63,7 @@ class GoogleCalendar {
     final client = await GoogleSignInManager.authenticatedClient;
     if (client == null) {
       log('$createEvent\nイベント登録失敗: HTTP Client is null');
-      GoogleSignInManager.signOut();
+      GoogleSignInManager.disconnect();
       return false;
     }
     // GoogleカレンダーAPIのインスタンスを生成
@@ -97,7 +97,7 @@ class GoogleCalendar {
     final client = await GoogleSignInManager.authenticatedClient;
     if (client == null) {
       log('$createEvent\n予定削除失敗: HTTP Client is null');
-      GoogleSignInManager.signOut();
+      GoogleSignInManager.disconnect();
       return false;
     }
     // GoogleカレンダーAPIのインスタンスを生成

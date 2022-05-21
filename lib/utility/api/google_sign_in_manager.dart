@@ -18,7 +18,7 @@ class GoogleSignInManager {
   static Future<bool> signInGoogle({required List<String> scope}) async {
     _googleSignIn = GoogleSignIn(scopes: scope);
     final isSignedIn = await _googleSignIn.isSignedIn();
-    _signedInAccount = (isSignedIn)
+    _signedInAccount = isSignedIn
         ? await _googleSignIn.signInSilently()  // サインイン済みの場合はポップアップを出さずにサインインする
         : await _googleSignIn.signIn();
 
@@ -40,7 +40,7 @@ class GoogleSignInManager {
   static Future<bool> isSignedIn() => _googleSignIn.isSignedIn();
 
   /// 認証情報を初期化する
-  static Future signOut() => _googleSignIn.signOut();
+  static Future disconnect() => _googleSignIn.disconnect();
 
   /// 認証済みのHTTPクライアントを取得する
   static Future<AuthClient?> get authenticatedClient => _googleSignIn.authenticatedClient();

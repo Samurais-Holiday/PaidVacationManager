@@ -232,7 +232,7 @@ class LocalStorageManager {
   /// 記録がない場合もfalse
   static Future<bool> readIsSyncGoogleCalendar() async {
     final isSync = await const FlutterSecureStorage().read(key: _isSyncGoogleCalendarKey);
-    log('IsSync value: $isSync\ntrue.toString: ${true.toString()}');
+    log('IsSync value: $isSync\n');
     return isSync != null && isSync == true.toString();
   }
 

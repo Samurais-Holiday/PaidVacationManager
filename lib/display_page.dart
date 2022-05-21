@@ -121,7 +121,7 @@ class _DisplayPageState extends State<DisplayPage> {
                 // 同期設定をOFFにした場合
                 // 認証情報を初期化する
                 if (await GoogleSignInManager.isSignedIn()) {
-                  GoogleSignInManager.signOut();
+                  GoogleSignInManager.disconnect();
                 }
               }
             },

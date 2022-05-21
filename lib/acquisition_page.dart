@@ -310,6 +310,8 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
   }
 
   /// 画面遷移(登録/キャンセル)を行うボタン
+  /// note: ユーザビリティを優先するため、
+  /// Googleカレンダーへのイベントの登録が完了する前にInfoダイアログを表示する
   Widget _navigatePageButton() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -356,9 +358,11 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
                             : ''}',
                         description: reason,
                     );
+                    await InformationDialog.show(context: context, info: 'Googleカレンダーのイベントを更新します');
                   } else {
                     // デバイスにIDがない場合はイベントの新規登録をする
-                    await _createCalendarEventAndStoreId(date: newDate, reason: reason);
+                    _createCalendarEventAndStoreId(date: newDate, reason: reason);
+                    await InformationDialog.show(context: context, info: 'Googleカレンダーにイベントを登録します');
                   }
                 }
               }
@@ -380,7 +384,8 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
                 );
                 // 同期設定がしてある場合はGoogleカレンダーに予定を追加する
                 if (Configure.instance.isSyncGoogleCalendar) {
-                  await _createCalendarEventAndStoreId(date: newDate, reason: reason);
+                  _createCalendarEventAndStoreId(date: newDate, reason: reason);
+                  await InformationDialog.show(context: context, info: 'Googleカレンダーにイベントを登録します');
                 }
 
               }
@@ -428,10 +433,8 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
       if (value) {
         // 成功したらストレージにイベントIDを保存する
         LocalStorageManager.writeGoogleCalendarEventId(eventId: eventId, date: date, amPm: _isHalfDay ? _amPm : null);
-        await InformationDialog.show(context: context, info: 'Googleカレンダーにイベントを追加しました');
       } else {
         log('Googleカレンダーに予定の追加失敗(ID: $eventId)');
-        await ErrorDialog.show(context: context, detail: 'Googleカレンダーへのイベントの追加に失敗しました');
       }
     });
   }
