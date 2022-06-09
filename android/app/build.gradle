@@ -42,8 +42,8 @@ android {
         applicationId "samurais.holiday.paid_vacation_manager"
         minSdkVersion 21
         targetSdkVersion flutter.targetSdkVersion
-        versionCode 4
-        versionName '1.4'
+        versionCode 5
+        versionName '1.5'
     }
 
     signingConfigs {
