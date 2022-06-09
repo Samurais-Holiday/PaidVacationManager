@@ -1,10 +1,9 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_info.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_manager.dart';
-import 'package:paid_vacation_manager/display_page.dart';
+import 'package:paid_vacation_manager/page/display_page.dart';
 import 'package:paid_vacation_manager/enum/am_pm.dart';
 import 'package:paid_vacation_manager/utility/api/ad_banner.dart';
 import 'package:paid_vacation_manager/utility/api/google_calendar.dart';
@@ -101,7 +100,7 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const AdBanner(adSize: AdSize.fullBanner),
+            const AdBannerWidget(),
             Container(
               margin: const EdgeInsets.only(left: 10, top: 50, right: 10, bottom: 10),
               child: _dateForm(),

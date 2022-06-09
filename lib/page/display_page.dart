@@ -1,21 +1,19 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:paid_vacation_manager/acquisition_page.dart';
-import 'package:paid_vacation_manager/add_page.dart';
+import 'package:paid_vacation_manager/enum/am_pm.dart';
+import 'package:paid_vacation_manager/page/acquisition_page.dart';
+import 'package:paid_vacation_manager/page/add_page.dart';
+import 'package:paid_vacation_manager/page/configuration_page.dart';
 import 'package:paid_vacation_manager/utility/api/google_calendar.dart';
-import 'package:paid_vacation_manager/utility/api/google_sign_in_manager.dart';
 import 'package:paid_vacation_manager/utility/configure.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_info.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_manager.dart';
-import 'package:paid_vacation_manager/editing_page.dart';
+import 'package:paid_vacation_manager/page/editing_page.dart';
 import 'package:paid_vacation_manager/utility/api/ad_banner.dart';
 import 'package:paid_vacation_manager/utility/api/ad_interstitial.dart';
 import 'package:paid_vacation_manager/utility/api/local_storage_manager.dart';
 import 'package:paid_vacation_manager/utility/api/url_manager.dart';
-
-import 'enum/am_pm.dart';
 
 /// 有給情報表示ページ
 /// givenDateToDisplayを指定することで、最初に表示する有給情報を指定できる
@@ -23,6 +21,7 @@ class DisplayPage extends StatefulWidget {
   const DisplayPage({Key? key, required this.manager, this.givenDateToDisplay}) : super(key: key);
   final PaidVacationManager manager;
   final DateTime? givenDateToDisplay;
+
   @override
   State<StatefulWidget> createState() => _DisplayPageState();
 }
@@ -97,37 +96,25 @@ class _DisplayPageState extends State<DisplayPage> {
                 );
               }
           ),
-          SwitchListTile(
-            secondary: const Icon(Icons.sync),
-            title: Text('Googleカレンダーと同期', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),),
-            value: Configure.instance.isSyncGoogleCalendar,
-            onChanged: (bool isSync) async {
-              // 値の設定
-              setState(() {
-                Configure.instance.isSyncGoogleCalendar = isSync;
-                LocalStorageManager.writeIsSyncGoogleCalendar(isSync);
-              });
-              if (isSync) {
-                // 同期設定をONにした場合、サインインを試みる
-                if (!await GoogleSignInManager.signInGoogle(scope: [GoogleCalendar.calendarScope])) {
-                  log('ログイン失敗');
-                  // 失敗したら同期設定OFFにする
-                  setState(() {
-                    Configure.instance.isSyncGoogleCalendar = false;
-                    LocalStorageManager.writeIsSyncGoogleCalendar(false);
-                  });
-                }
-              } else {
-                // 同期設定をOFFにした場合
-                // 認証情報を初期化する
-                if (await GoogleSignInManager.isSignedIn()) {
-                  GoogleSignInManager.disconnect();
-                }
-              }
+          ListTile(
+            leading: const Icon(Icons.settings, color: Colors.white),
+            title: Text('設定', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ConfigurationPage())
+
+              );
             },
           ),
           ListTile(
-            leading: const Icon(Icons.link, color: Colors.white,),
+            leading: const Icon(Icons.link, color: Colors.white),
+            title: Text('このアプリの使い方', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),),
+            onTap: UrlManager.launchManual,
+          ),
+          ListTile(
+            leading: const Icon(Icons.link, color: Colors.white),
             title: Text('プライバシーポリシー', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),),
             onTap: UrlManager.launchPolicy,
           ),
@@ -365,7 +352,7 @@ class _DisplayPageState extends State<DisplayPage> {
           child: Column(
             children: [
               if (index == 0 || index % _bannerPeriod == 0)
-                AdBanner(adSize: AdSize.fullBanner, backgroundColor: Theme.of(context).primaryColor,),
+                AdBannerWidget(backgroundColor: Theme.of(context).primaryColor,),
               ListTile(
                 title: Text('${date.year}'
                     '/${date.month.toString().padLeft(2, '0')}'

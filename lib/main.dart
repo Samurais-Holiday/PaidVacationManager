@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:paid_vacation_manager/top_page.dart';
+import 'package:paid_vacation_manager/page/top_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

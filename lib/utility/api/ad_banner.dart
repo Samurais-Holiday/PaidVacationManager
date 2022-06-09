@@ -5,22 +5,21 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 /// AdMobのバナーを表示するクラス
-class AdBanner extends StatefulWidget {
-  const AdBanner({Key? key, required this.adSize, this.backgroundColor}) : super(key: key);
-  final AdSize adSize;
+class AdBannerWidget extends StatefulWidget {
+  const AdBannerWidget({Key? key, this.backgroundColor}) : super(key: key);
   final Color? backgroundColor;
 
   @override
-  State<StatefulWidget> createState() => _AdBannerState();
+  State<StatefulWidget> createState() => _AdBannerWidgetState();
 }
 
-class _AdBannerState extends State<AdBanner> {
+class _AdBannerWidgetState extends State<AdBannerWidget> {
   late BannerAd _banner;
 
   @override
   void initState() {
     super.initState();
-    _banner = _createBanner(widget.adSize);
+    _banner = _createBanner(AdSize.fullBanner);
   }
 
   @override

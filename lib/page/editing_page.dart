@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:paid_vacation_manager/data/given_days_info.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_manager.dart';
-import 'package:paid_vacation_manager/display_page.dart';
+import 'package:paid_vacation_manager/page/display_page.dart';
 import 'package:paid_vacation_manager/utility/api/ad_banner.dart';
 import 'package:paid_vacation_manager/utility/date_times.dart';
 import 'package:paid_vacation_manager/utility/error_dialog.dart';
@@ -46,7 +45,7 @@ class _EditingPageState extends State<EditingPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const AdBanner(adSize: AdSize.fullBanner),
+            const AdBannerWidget(),
             Container(
               margin: const EdgeInsets.only(left: 30, top: 30, right: 30, bottom: 10),
               child: _inputGivenDaysForm(),
