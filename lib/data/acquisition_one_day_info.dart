@@ -1,5 +1,7 @@
 import 'dart:developer';
 
+import 'package:paid_vacation_manager/data/paid_vacation_time.dart';
+
 /// 有給取得日データクラス(全休)
 class AcquisitionOneDayInfo {
   /// 全休取得データ
@@ -20,18 +22,8 @@ class AcquisitionOneDayInfo {
     return true;
   }
 
-  /// 取得日データを上書きする
-  bool upDate({required final DateTime date, final String reason = ''}) {
-    if (!_acquisitionDaysInfo.containsKey(date)) {
-      log('${upDate.toString()}\n対象データが存在しません');
-      return false;
-    }
-    _acquisitionDaysInfo[date] = reason;
-    return true;
-  }
-
   /// 有給取得日数取得
-  int get acquisitionDays => _acquisitionDaysInfo.length;
+  PaidVacationTime get acquisitionDays => PaidVacationTime(days: _acquisitionDaysInfo.length);
 
   /// データを消去する
   /// データがない場合はfalse

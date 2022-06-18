@@ -7,7 +7,7 @@ import 'package:paid_vacation_manager/page/display_page.dart';
 import 'package:paid_vacation_manager/enum/am_pm.dart';
 import 'package:paid_vacation_manager/utility/api/ad_banner.dart';
 import 'package:paid_vacation_manager/utility/api/google_calendar.dart';
-import 'package:paid_vacation_manager/utility/configure.dart';
+import 'package:paid_vacation_manager/config/configure.dart';
 import 'package:paid_vacation_manager/utility/date_times.dart';
 import 'package:paid_vacation_manager/utility/error_dialog.dart';
 import 'package:paid_vacation_manager/utility/information_dialog.dart';
@@ -23,13 +23,16 @@ class AcquisitionPage extends StatefulWidget {
     required this.givenDate,
     this.initialDate,
     this.initialAmPm,
+    this.initialHours,
     this.initialReason = '',
-    this.isEditingMode = false}) : super(key: key);
+    this.isEditingMode = false})
+        : super(key: key);
 
   final PaidVacationManager manager;
   final DateTime givenDate;
   final DateTime? initialDate;
   final AmPm? initialAmPm;
+  final int? initialHours;
   final String initialReason;
   final bool isEditingMode;
 
@@ -40,24 +43,20 @@ class AcquisitionPage extends StatefulWidget {
 class _AcquisitionPageState extends State<AcquisitionPage> {
   static const double _menuMaxHeight = 450;
   // initializeMember で初期化を行う
-  late PaidVacationInfo? _editingInfo;
+  late PaidVacationInfo _editingInfo;
   late TextEditingController _reasonController;
   late int _acquisitionYear;
   late int _acquisitionMonth;
   late int _acquisitionDay;
+  var _isOneDay = true;
   var _isHalfDay = false;
   var _amPm = AmPm.am;
-
+  var _isHour = false;
+  var _hours = 1;
 
   @override
   void initState() {
     super.initState();
-    // これ以降 _editingInfo が非nullであることを保証する
-    _editingInfo = widget.manager.paidVacationInfo(widget.givenDate);
-    if (_editingInfo == null) {
-      Navigator.pop(context);
-      return;
-    }
     // 編集モードの場合、widget.initialDate が非nullableであることを保証する
     if (widget.isEditingMode
         && widget.initialDate == null) {
@@ -70,6 +69,12 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
 
   /// メンバ変数を初期化する
   void _initializeMember() {
+    final targetInfo = widget.manager.paidVacationInfo(widget.givenDate);
+    if (targetInfo == null) {
+      Navigator.pop(context);
+      return;
+    }
+    _editingInfo = targetInfo;
     _reasonController = TextEditingController(text: widget.initialReason);
     final now = DateTime.now();
     if (widget.isEditingMode) {
@@ -79,13 +84,20 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
       _acquisitionDay = widget.initialDate!.day;
       if (widget.initialAmPm != null) {
         _amPm = widget.initialAmPm!;
+        _isOneDay = false;
         _isHalfDay = true;
+        _isHour = false;
+      } else if (widget.initialHours != null) {
+        _hours = widget.initialHours!;
+        _isOneDay = false;
+        _isHalfDay = false;
+        _isHour = true;
       }
     } else {
       // 追加モードは有効期間内であれば今日、そうでない場合は付与日に設定する
-      _acquisitionYear = _editingInfo!.isValidDay(now) ? now.year : _editingInfo!.givenDate.year;
-      _acquisitionMonth = _editingInfo!.isValidDay(now) ? now.month : _editingInfo!.givenDate.month;
-      _acquisitionDay = _editingInfo!.isValidDay(now) ? now.day : _editingInfo!.givenDate.day;
+      _acquisitionYear = _editingInfo.isValidDay(now) ? now.year : _editingInfo.givenDate.year;
+      _acquisitionMonth = _editingInfo.isValidDay(now) ? now.month : _editingInfo.givenDate.month;
+      _acquisitionDay = _editingInfo.isValidDay(now) ? now.day : _editingInfo.givenDate.day;
     }
   }
 
@@ -106,16 +118,19 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
               child: _dateForm(),
             ),
             _oneDayOrHalfDayButton(),
-            if (_isHalfDay)
-              Container(margin: const EdgeInsets.only(left: 50, right: 50), height: 1.5, color: Colors.black26,),
+            if (_isHalfDay || _isHour)
+              Container(margin: const EdgeInsets.only(left: 30, right: 30), height: 1.5, color: Colors.black26,),
             if (_isHalfDay)
               _amOrPmButton(),
+            if (_isHour)
+              _hoursForm(),
             Container(
               margin: const EdgeInsets.only(left: 30, top: 10, right: 30, bottom: 10),
               child: _inputReasonForm(),
             ),
+            const AdBannerWidget(),
             Container(
-              margin: const EdgeInsets.all(30),
+              margin: const EdgeInsets.all(15),
               child: _navigatePageButton(),
             ),
           ],
@@ -133,7 +148,7 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
         Text('取得日: ', style: Theme.of(context).textTheme.headline6,),
         DropdownButton<int>(
           dropdownColor: Theme.of(context).backgroundColor,
-          items: Lists.convertNumListToWidgetList(context, Lists.create(_editingInfo!.givenDate.year, _editingInfo!.lapseDate.year)),
+          items: Lists.convertNumListToWidgetList(context, Lists.create(_editingInfo.givenDate.year, _editingInfo.lapseDate.year)),
           value: _acquisitionYear,
           style: Theme.of(context).textTheme.headline5,
           underline: Container(height: 2, color: Colors.black45),
@@ -152,10 +167,10 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
 
         DropdownButton<int>(
           dropdownColor: Theme.of(context).backgroundColor,
-          items: _acquisitionYear == _editingInfo!.givenDate.year
-              ? Lists.convertNumListToWidgetList(context, Lists.create(_editingInfo!.givenDate.month, 12), 2) // 下限を設定
-              : _acquisitionYear == _editingInfo!.lapseDate.year
-                  ? Lists.convertNumListToWidgetList(context, Lists.create(1, _editingInfo!.lapseDate.month), 2) // 上限を設定
+          items: _acquisitionYear == _editingInfo.givenDate.year
+              ? Lists.convertNumListToWidgetList(context, Lists.create(_editingInfo.givenDate.month, 12), 2) // 下限を設定
+              : _acquisitionYear == _editingInfo.lapseDate.year
+                  ? Lists.convertNumListToWidgetList(context, Lists.create(1, _editingInfo.lapseDate.month), 2) // 上限を設定
                   : Lists.convertNumListToWidgetList(context, Lists.create(1, 12), 2), // その間
           value: _acquisitionMonth,
           style: Theme.of(context).textTheme.headline5,
@@ -175,10 +190,10 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
 
         DropdownButton<int>(
           dropdownColor: Theme.of(context).backgroundColor,
-          items: _acquisitionYear == _editingInfo!.givenDate.year && _acquisitionMonth == _editingInfo!.givenDate.month
-              ? Lists.convertNumListToWidgetList(context, Lists.create(_editingInfo!.givenDate.day, DateTimes.endOfMonth[_acquisitionMonth]!), 2) // 下限を設定
-              : _acquisitionYear == _editingInfo!.lapseDate.year && _acquisitionMonth == _editingInfo!.lapseDate.month
-                  ? Lists.convertNumListToWidgetList(context, Lists.create(1, _editingInfo!.lapseDate.day), 2) // 上限を設定
+          items: _acquisitionYear == _editingInfo.givenDate.year && _acquisitionMonth == _editingInfo.givenDate.month
+              ? Lists.convertNumListToWidgetList(context, Lists.create(_editingInfo.givenDate.day, DateTimes.endOfMonth[_acquisitionMonth]!), 2) // 下限を設定
+              : _acquisitionYear == _editingInfo.lapseDate.year && _acquisitionMonth == _editingInfo.lapseDate.month
+                  ? Lists.convertNumListToWidgetList(context, Lists.create(1, _editingInfo.lapseDate.day), 2) // 上限を設定
                   : Lists.convertNumListToWidgetList(context, Lists.create(1, DateTimes.endOfMonth[_acquisitionMonth]!), 2), // それらの間
           value: _acquisitionDay,
           style: Theme.of(context).textTheme.headline5,
@@ -202,14 +217,14 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
   /// 取得日の入力内容をチェックし、有効期間外になる場合は失効日にセットする
   void _invalidGivenDateThenReset() {
     // 取得日が失効日より後になる場合
-    if (_editingInfo!.lapseDate.isBefore(DateTime(_acquisitionYear, _acquisitionMonth, _acquisitionDay))) {
-      _acquisitionYear = _editingInfo!.lapseDate.year;
-      _acquisitionMonth = _editingInfo!.lapseDate.month;
-      _acquisitionDay = _editingInfo!.lapseDate.day;
+    if (_editingInfo.lapseDate.isBefore(DateTime(_acquisitionYear, _acquisitionMonth, _acquisitionDay))) {
+      _acquisitionYear = _editingInfo.lapseDate.year;
+      _acquisitionMonth = _editingInfo.lapseDate.month;
+      _acquisitionDay = _editingInfo.lapseDate.day;
     }
   }
 
-  /// 全休/半休 ラジオボタン
+  /// 全休/半休/時間 ラジオボタン
   Widget _oneDayOrHalfDayButton() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -217,14 +232,18 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
         Row(
           children: [
             Radio<bool>(
-                value: false,
-                groupValue: _isHalfDay,
-                onChanged: (bool? isFalse) {
+                value: true,
+                groupValue: _isOneDay,
+                onChanged: (bool? isOneDay) {
                   setState(() {
-                    if (isFalse == null) {
+                    if (isOneDay == null) {
                       return;
                     }
-                    _isHalfDay = isFalse;
+                    _isOneDay = isOneDay;
+                    if (isOneDay) {
+                      _isHalfDay = false;
+                      _isHour = false;
+                    }
                   });
                 }
             ),
@@ -236,16 +255,41 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
             Radio<bool>(
                 value: true,
                 groupValue: _isHalfDay,
-                onChanged: (bool? isTrue) {
+                onChanged: (bool? isHalfDay) {
                   setState(() {
-                    if (isTrue == null) {
+                    if (isHalfDay == null) {
                       return;
                     }
-                    _isHalfDay = isTrue;
+                    _isHalfDay = isHalfDay;
+                    if (isHalfDay) {
+                      _isOneDay = false;
+                      _isHour = false;
+                    }
                   });
                 }
             ),
             Text('半休', style: Theme.of(context).textTheme.headline6,),
+          ],
+        ),
+        Row(
+          children: [
+            Radio<bool>(
+                value: true,
+                groupValue: _isHour,
+                onChanged: (bool? isHour) {
+                  setState(() {
+                    if (isHour == null) {
+                      return;
+                    }
+                    _isHour = isHour;
+                    if (isHour) {
+                      _isOneDay = false;
+                      _isHalfDay = false;
+                    }
+                  });
+                }
+            ),
+            Text('時間', style: Theme.of(context).textTheme.headline6,),
           ],
         )
       ],
@@ -295,6 +339,32 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
     );
   }
 
+  /// 時間選択ドロップダウン(0~8)
+  Widget _hoursForm() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        DropdownButton<int>(
+          dropdownColor: Theme.of(context).backgroundColor,
+          items: Lists.convertNumListToWidgetList(context, Lists.create(1, 8)),
+          value: _hours,
+          style: Theme.of(context).textTheme.headline5,
+          underline: Container(height: 2, color: Colors.black45),
+          menuMaxHeight: _menuMaxHeight,
+          onChanged: (int? newMonth) {
+            if (newMonth == null) {
+              return;
+            }
+            setState(() {
+              _hours = newMonth;
+            });
+          },
+        ),
+        Text(' 時間', style: Theme.of(context).textTheme.subtitle1,),
+      ],
+    );
+  }
+
   /// 理由入力フォーム
   Widget _inputReasonForm() {
     return TextFormField(
@@ -331,21 +401,26 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
             final reason = _reasonController.value.text;
             if (widget.isEditingMode) {
               // 編集モード
-              isSuccess = _editingInfo!.updateAcquisitionInfo(
+              isSuccess = _editingInfo.updateAcquisitionInfo(
                   prevDate: widget.initialDate!, newDate: newDate,
                   prevAmPm: widget.initialAmPm, newAmPm: _isHalfDay ? _amPm : null,
+                  prevHours: widget.initialHours, newHours: _isHour ? _hours : null,
                   newReason: reason);
               if (isSuccess) {
                 // 成功したらストレージの内容も更新する
                 LocalStorageManager.updateAcquisitionInfo(
-                    givenDate: _editingInfo!.givenDate,
+                    givenDate: _editingInfo.givenDate,
                     prevDate: widget.initialDate!, newDate: newDate,
                     prevAmPm: widget.initialAmPm, newAmPm: _isHalfDay ? _amPm : null,
+                    isPrevIsHour: widget.initialHours != null, newHours: _hours,
                     reason: reason);
                 // 同期設定がONの場合は、Googleカレンダーの予定を更新する
                 if (Configure.instance.isSyncGoogleCalendar) {
                   // デバイスにイベントIDが保存してある場合はそのIDを使用する
-                  final eventId = await LocalStorageManager.readGoogleCalendarEventId(date: widget.initialDate!, amPm: widget.initialAmPm);
+                  final eventId = await LocalStorageManager.readGoogleCalendarEventId(
+                      date: widget.initialDate!,
+                      amPm: widget.initialAmPm,
+                      isHour: widget.initialHours != null);
                   if (eventId != null) {
                     GoogleCalendar.updateEvent(
                         eventId: eventId,
@@ -354,7 +429,9 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
                             ? _amPm == AmPm.am
                                 ? '（午前）'
                                 : '（午後）'
-                            : ''}',
+                            : _isHour
+                                ? '($_hours時間)'
+                                : ''}',
                         description: reason,
                     );
                     await InformationDialog.show(context: context, info: 'Googleカレンダーのイベントを更新します');
@@ -371,14 +448,16 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
                   givenDate: widget.givenDate,
                   acquisitionDate: newDate,
                   amPm: _isHalfDay ? _amPm : null,
+                  hours: _isHour ? _hours : null,
                   reason: reason,
               );
               if (isSuccess) {
                 // 成功したらストレージにも書き込む
                 LocalStorageManager.writeAcquisitionInfo(
-                    givenDate: _editingInfo!.givenDate,
+                    givenDate: _editingInfo.givenDate,
                     acquisitionDate: newDate,
                     amPm: _isHalfDay ? _amPm : null,
+                    hours: _isHour ? _hours : null,
                     reason: reason,
                 );
                 // 同期設定がしてある場合はGoogleカレンダーに予定を追加する
@@ -396,7 +475,7 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
                   MaterialPageRoute(
                       builder: (_) => DisplayPage(
                         manager: widget.manager,
-                        givenDateToDisplay: _editingInfo!.givenDate,
+                        givenDateToDisplay: _editingInfo.givenDate,
                       )
                   ),
                   (route) => false);
@@ -426,12 +505,18 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
           ? _amPm == AmPm.am
               ? '（午前）'
               : '（午後）'
-          : ''}',
+          : _isHour
+              ? '($_hours時間)'
+              : ''}',
       description: reason,
     ).then((value) async {
       if (value) {
         // 成功したらストレージにイベントIDを保存する
-        LocalStorageManager.writeGoogleCalendarEventId(eventId: eventId, date: date, amPm: _isHalfDay ? _amPm : null);
+        LocalStorageManager.writeGoogleCalendarEventId(
+            eventId: eventId,
+            date: date,
+            amPm: _isHalfDay ? _amPm : null,
+            isHour: _isHour);
       } else {
         log('Googleカレンダーに予定の追加失敗(ID: $eventId)');
       }

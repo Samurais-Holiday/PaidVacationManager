@@ -106,14 +106,14 @@ void main() {
     TestUtility.addAndCheck(true, manager, lastYear);
     TestUtility.addAndCheck(true, manager, today);
     TestUtility.addAndCheck(true, manager, threeYearsAgo);
-    expect(manager.backInfo(manager.paidVacationInfo(lastYear)!)?.givenDate, threeYearsAgo);
-    expect(manager.backInfo(manager.paidVacationInfo(today)!)?.givenDate, lastYear);
+    expect(manager.prevInfo(manager.paidVacationInfo(lastYear)!)?.givenDate, threeYearsAgo);
+    expect(manager.prevInfo(manager.paidVacationInfo(today)!)?.givenDate, lastYear);
   });
 
   test('backInfo_データなし', () {
     final manager = PaidVacationManager();
     TestUtility.addAndCheck(true, manager, today);
-    expect(manager.backInfo(manager.paidVacationInfo(today)!), isNull);
+    expect(manager.prevInfo(manager.paidVacationInfo(today)!), isNull);
   });
 
   test('nextInfo_データあり', () {
@@ -128,7 +128,7 @@ void main() {
   test('nextInfo_データなし', () {
     final manager = PaidVacationManager();
     TestUtility.addAndCheck(true, manager, today);
-    expect(manager.backInfo(manager.paidVacationInfo(today)!), isNull);
+    expect(manager.prevInfo(manager.paidVacationInfo(today)!), isNull);
   });
 }
 

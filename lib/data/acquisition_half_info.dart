@@ -1,6 +1,8 @@
 import 'dart:developer';
 
 import 'package:analyzer_plugin/utilities/pair.dart';
+import 'package:paid_vacation_manager/config/configure.dart';
+import 'package:paid_vacation_manager/data/paid_vacation_time.dart';
 import 'package:paid_vacation_manager/enum/am_pm.dart';
 
 /// 有給取得日データクラス(半休)
@@ -28,7 +30,8 @@ class AcquisitionHalfInfo {
   }
 
   /// 有給取得日数を取得
-  double get acquisitionDays => _acquisitionHalfDays.length * 0.5;
+  PaidVacationTime get acquisitionDays
+      => PaidVacationTime(hours: _acquisitionHalfDays.length * Configure.instance.hoursPerHalf);
 
   /// データを削除する
   /// データがない場合はfalse

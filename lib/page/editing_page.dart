@@ -216,7 +216,7 @@ class _EditingPageState extends State<EditingPage> {
             }
             // 付与日数を設定
             // 修正前の付与日数を覚えておく
-            final prevGivenDay = widget.manager.paidVacationInfo(widget.givenDate)!.givenDays;
+            final prevGivenDays = widget.manager.paidVacationInfo(widget.givenDate)!.givenDays.days;
             if (!widget.manager.setGivenDays(widget.givenDate, givenDays)) {
               ErrorDialog.show(
                   context: context,
@@ -227,7 +227,7 @@ class _EditingPageState extends State<EditingPage> {
             // 失効日を設定
             final newLapseDate = DateTime(_lapseYear, _lapseMonth, _lapseDay);
             if (!widget.manager.setLapseDate(givenDate: widget.givenDate, value: newLapseDate)) {
-              widget.manager.setGivenDays(widget.givenDate, prevGivenDay); // 付与日数を元の値に設定
+              widget.manager.setGivenDays(widget.givenDate, prevGivenDays); // 付与日数を元の値に設定
               ErrorDialog.show(context: context, detail: '"失効日" は、付与日から2年未満には設定できません');
               return;
             }

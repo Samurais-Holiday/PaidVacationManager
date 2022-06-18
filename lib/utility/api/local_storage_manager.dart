@@ -17,8 +17,12 @@ class LocalStorageManager {
   static const _givenDaysInfoKey = 'GivenDaysInfo';
   static const _acquisitionOneDayInfoKey = 'AcquisitionOneDayInfo';
   static const _acquisitionHalfInfoKey = 'AcquisitionHalfInfo';
+  static const _acquisitionHourInfoKey = 'acquisitionHourInfo';
   static const _isSyncGoogleCalendarKey = 'IsSyncGoogleCalendar';
   static const _googleCalendarEventIdKey = 'GoogleCalendarEventId';
+
+  /// 区切り文字
+  static const _splitChar = '@&%#';
 
   /// 有給データ読込
   /// 登録情報がない場合は`null`
@@ -76,15 +80,9 @@ class LocalStorageManager {
             key: _givenDaysInfoKey + info.givenDate.toString(),
             value: info.lapseDate.toString() + info.givenDays.toString());
 
-  /// GivenDaysInfoを削除
-  /// key: GivenDaysInfo + 付与日, value: 失効日 + 付与日数
-  static Future _deleteGivenDaysInfo({required DateTime givenDate})
-      => const FlutterSecureStorage().delete(
-          key: _givenDaysInfoKey + givenDate.toString());
-
   /// PaidVacationManagerに有給取得情報を設定する
   /// 引数 manager は out引数
-  static void _setAcquisitionInfo({required PaidVacationManager manager, required Map<String, String> storageData}) {
+  static void _setAcquisitionInfo({required PaidVacationManager manager, required final Map<String, String> storageData}) {
     storageData.forEach((key, value) {
       // 全休取得データの場合
       if (key.startsWith(_acquisitionOneDayInfoKey)) {
@@ -93,6 +91,10 @@ class LocalStorageManager {
       // 半休取得データの場合
       else if (key.startsWith(_acquisitionHalfInfoKey)) {
         _setAcquisitionHalf(manager: manager, key: key, value: value);
+      }
+      // 時間単位取得データの場合
+      else if (key.startsWith(_acquisitionHourInfoKey)) {
+        _setAcquisitionHourInfo(manager: manager, key: key, value: value);
       }
       else {
         log('${_setAcquisitionInfo.toString()}\n有給取得情報以外のデータです'
@@ -121,22 +123,6 @@ class LocalStorageManager {
         : false;
   }
 
-  /// 全休取得データを書き込む
-  /// key: AcquisitionOneDayInfo + 付与日 + 有給取得日, value: 取得理由
-  static Future _writeAcquisitionOneDay({
-      required final DateTime givenDate,
-      required final DateTime acquisitionDate,
-      final String reason = '', })
-          => const FlutterSecureStorage().write(
-              key: _acquisitionOneDayInfoKey + givenDate.toString() + acquisitionDate.toString(),
-              value: reason);
-
-  /// 全休取得データを消去する
-  /// key: AcquisitionOneDayInfo + 付与日 + 有給取得日, value: 取得理由
-  static Future _deleteAcquisitionOneDay({required DateTime givenDate, required DateTime acquisitionDate})
-      => const FlutterSecureStorage().delete(
-          key: _acquisitionOneDayInfoKey + givenDate.toString() + acquisitionDate.toString());
-
   /// ストレージのデータからPaidVacationManagerに半休取得情報を設定する
   /// key: AcquisitionHalfInfo + 付与日 + 半休取得日 + AM/PM, value: 取得理由
   static bool _setAcquisitionHalf({required PaidVacationManager manager, required String key, required String value}) {
@@ -146,7 +132,7 @@ class LocalStorageManager {
         _acquisitionHalfInfoKey.length + DateTimes.length); // end
     final acquisitionDateStr = key.substring(
         _acquisitionHalfInfoKey.length + DateTimes.length, // start
-        key.length - AmPm.am.toString().length);              // end
+        key.length - AmPm.am.toString().length);           // end
     final amPmStr = key.substring(key.length - AmPm.am.toString().length);
     // それぞれの型に変換
     final givenDate = DateTime.tryParse(givenDateStr);
@@ -165,6 +151,81 @@ class LocalStorageManager {
         : false;
   }
 
+  /// ストレージのデータからPaidVacationManagerに時間単位取得情報を設定する
+  /// key: AcquisitionHourInfo + 付与日 + 時間単位有給取得日
+  /// value: 取得時間(1~8) + 取得理由
+  static bool _setAcquisitionHourInfo({
+      required PaidVacationManager manager,
+      required final String key,
+      required final String value }) {
+
+    // key, valueを分割
+    final keys = key.split(_splitChar);
+    final values = value.split(_splitChar);
+    if (keys.length < 3 || values.length < 2) {
+      return false;
+    }
+    // 文字列をそれぞれの型に変換
+    final givenDate = DateTime.tryParse(keys[1]);
+    final acquisitionDate = DateTime.tryParse(keys[2]);
+    final acquisitionHours = int.tryParse(values[0]);
+    if (givenDate == null || acquisitionDate == null || acquisitionHours == null) {
+      log('$_setAcquisitionHourInfo\n文字列⇒データ型の変換に失敗しました');
+      return false;
+    }
+    final targetInfo = manager.paidVacationInfo(givenDate);
+    return targetInfo != null
+        ? targetInfo.acquisitionVacation(date: acquisitionDate, hours: acquisitionHours, reason: values[1])
+        : false;
+  }
+
+  /// 有給取得情報の書き込み
+  /// 半休の時は amPm を指定すること
+  /// 時間単位の時は acquisitionHours を指定すること
+  static Future writeAcquisitionInfo({
+      required final DateTime givenDate,
+      required final DateTime acquisitionDate,
+      final AmPm? amPm,
+      final int? hours,
+      final String reason = '', }) async {
+    // 全休
+    if (amPm == null && hours == null) {
+      await _writeAcquisitionOneDay(
+          givenDate: givenDate,
+          acquisitionDate: acquisitionDate,
+          reason: reason);
+    }
+    // 半休
+    else if (amPm != null && hours == null) {
+      await _writeAcquisitionHalf(
+          givenDate: givenDate,
+          acquisitionDate: acquisitionDate,
+          amPm: amPm,
+          reason: reason);
+    }
+    // 時間単位
+    else if (amPm == null && hours != null) {
+      await _writeAcquisitionHour(
+          givenDate: givenDate,
+          acquisitionDate: acquisitionDate,
+          acquisitionHours: hours,
+          reason: reason);
+    }
+    else {
+      log('$writeAcquisitionInfo\nWrite failure: Invalid acquisitionType');
+    }
+  }
+
+  /// 全休取得データを書き込む
+  /// key: AcquisitionOneDayInfo + 付与日 + 有給取得日, value: 取得理由
+  static Future _writeAcquisitionOneDay({
+      required final DateTime givenDate,
+      required final DateTime acquisitionDate,
+      final String reason = '', })
+          => const FlutterSecureStorage().write(
+              key: '$_acquisitionOneDayInfoKey$givenDate$acquisitionDate',
+              value: reason);
+
   /// 半休取得情報の書き込み
   /// key: AcquisitionHalfInfo + 付与日 + 半休取得日 + AM/PM, value: 取得理由
   static Future _writeAcquisitionHalf({
@@ -173,8 +234,87 @@ class LocalStorageManager {
       required AmPm amPm,
       String reason = '',})
           => const FlutterSecureStorage().write(
-              key: _acquisitionHalfInfoKey + givenDate.toString() + acquisitionDate.toString() + amPm.toString(),
+              key: '$_acquisitionHalfInfoKey$givenDate$acquisitionDate$amPm',
               value: reason);
+
+  /// 時間単位有給情報の書き込み
+  /// key: AcquisitionHourInfo + 付与日 + 時間単位有給取得日
+  /// value: 取得時間(1~8) + 取得理由
+  static Future _writeAcquisitionHour({
+      required final DateTime givenDate,
+      required final DateTime acquisitionDate,
+      required final int acquisitionHours,
+      required final String reason })
+          => const FlutterSecureStorage().write(
+              key: '$_acquisitionHourInfoKey$_splitChar$givenDate$_splitChar$acquisitionDate',
+              value: '$acquisitionHours$_splitChar$reason');
+
+  /// 有給取得情報の更新
+  static Future updateAcquisitionInfo({
+      required final DateTime givenDate,
+      required final DateTime prevDate, required final DateTime newDate,
+      final AmPm? prevAmPm, final AmPm? newAmPm,
+      final bool isPrevIsHour = false, final int? newHours,
+      final String reason = ''}) async {
+
+    await deleteAcquisitionInfo(
+        givenDate: givenDate,
+        acquisitionDate: prevDate,
+        amPm: prevAmPm,
+        isHours: isPrevIsHour);
+    await writeAcquisitionInfo(
+        givenDate: givenDate,
+        acquisitionDate: newDate,
+        amPm: newAmPm,
+        hours: newHours,
+        reason: reason);
+  }
+
+  /// 有給取得情報の削除
+  static Future deletePaidVacationInfo(PaidVacationInfo info) async {
+    await _deleteGivenDaysInfo(givenDate: info.givenDate);
+    for (var key in info.sortedAcquisitionDate().keys) {
+      await deleteAcquisitionInfo(
+          givenDate: info.givenDate,
+          acquisitionDate: key.item1,
+          amPm: key.item2,
+          isHours: key.item3 != null);
+    }
+  }
+
+  /// GivenDaysInfoを削除
+  /// key: GivenDaysInfo + 付与日, value: 失効日 + 付与日数
+  static Future _deleteGivenDaysInfo({required DateTime givenDate})
+      => const FlutterSecureStorage().delete(
+          key: '$_givenDaysInfoKey$givenDate');
+
+  /// 有給取得情報の削除
+  static Future deleteAcquisitionInfo({
+    required final DateTime givenDate,
+    required final DateTime acquisitionDate,
+    final AmPm? amPm,
+    final bool isHours = false }) async {
+    // 全休
+    if (amPm == null && !isHours) {
+      await _deleteAcquisitionOneDay(givenDate: givenDate, acquisitionDate: acquisitionDate);
+    }
+    // 半休
+    else if (amPm != null && !isHours) {
+      await _deleteAcquisitionHalf(givenDate: givenDate, acquisitionDate: acquisitionDate, amPm: amPm);
+    }
+    // 時間単位
+    else if (amPm == null && isHours) {
+      await _deleteAcquisitionHour(givenDate: givenDate, acquisitionDate: acquisitionDate);
+    }
+  }
+
+  /// 全休取得データを消去する
+  /// key: AcquisitionOneDayInfo + 付与日 + 有給取得日, value: 取得理由
+  static Future _deleteAcquisitionOneDay({
+      required final DateTime givenDate,
+      required final DateTime acquisitionDate })
+          => const FlutterSecureStorage().delete(
+              key: '$_acquisitionOneDayInfoKey$givenDate$acquisitionDate');
 
   /// 半休取得情報の削除
   /// key: AcquisitionHalfInfo + 付与日 + 半休取得日 + AM/PM, value: 取得理由
@@ -183,50 +323,16 @@ class LocalStorageManager {
       required DateTime acquisitionDate,
       required AmPm amPm,})
           => const FlutterSecureStorage().delete(
-              key: _acquisitionHalfInfoKey + givenDate.toString() + acquisitionDate.toString() + amPm.toString());
+              key: '$_acquisitionHalfInfoKey$givenDate$acquisitionDate$amPm');
 
-  /// 有給取得情報の書き込み
-  static Future writeAcquisitionInfo({
+  /// 時間単位有給情報の削除
+  /// key: AcquisitionHourInfo + 付与日 + 時間単位有給取得日
+  /// value: 取得時間(1~8) + 取得理由
+  static Future _deleteAcquisitionHour({
       required final DateTime givenDate,
-      required final DateTime acquisitionDate,
-      final AmPm? amPm,
-      final String reason = '',
-  }) =>
-      amPm == null
-          ? _writeAcquisitionOneDay(givenDate: givenDate, acquisitionDate: acquisitionDate, reason: reason)
-          : _writeAcquisitionHalf(givenDate: givenDate, acquisitionDate: acquisitionDate, amPm: amPm, reason: reason);
-
-  /// 有給取得情報の更新
-  static Future updateAcquisitionInfo({
-      required DateTime givenDate,
-      required DateTime prevDate, required DateTime newDate,
-      required AmPm? prevAmPm, required AmPm? newAmPm,
-      String reason = ''}) async {
-
-    await deleteAcquisitionInfo(
-        givenDate: givenDate,
-        acquisitionDate: prevDate,
-        amPm: prevAmPm);
-    await writeAcquisitionInfo(
-        givenDate: givenDate,
-        acquisitionDate: newDate,
-        amPm: newAmPm,
-        reason: reason);
-  }
-
-  /// 有給取得情報の削除
-  static Future deletePaidVacationInfo(PaidVacationInfo info) async {
-    await _deleteGivenDaysInfo(givenDate: info.givenDate);
-    for (var key in info.sortedAcquisitionDate().keys) {
-      await deleteAcquisitionInfo(givenDate: info.givenDate, acquisitionDate: key.first, amPm: key.last);
-    }
-  }
-
-  /// 有給取得情報の削除
-  static Future deleteAcquisitionInfo({required DateTime givenDate, required DateTime acquisitionDate, AmPm? amPm})
-      => (amPm == null)
-          ? _deleteAcquisitionOneDay(givenDate: givenDate, acquisitionDate: acquisitionDate)
-          : _deleteAcquisitionHalf(givenDate: givenDate, acquisitionDate: acquisitionDate, amPm: amPm);
+      required final DateTime acquisitionDate })
+          => const FlutterSecureStorage().delete(
+              key: '$_acquisitionHourInfoKey$_splitChar$givenDate$_splitChar$acquisitionDate');
 
   /// Googleカレンダーとの同期設定を読み込む
   /// 記録がない場合もfalse
@@ -242,14 +348,28 @@ class LocalStorageManager {
 
   /// GoogleカレンダーイベントIDの読込み
   /// イベントIDが記録されていない場合はnull
-  static Future<String?> readGoogleCalendarEventId({required final DateTime date, final AmPm? amPm})
-      => const FlutterSecureStorage().read(key: '$_googleCalendarEventIdKey$date$amPm');
+  static Future<String?> readGoogleCalendarEventId({
+    required final DateTime date,
+    final AmPm? amPm,
+    final bool isHour = false })
+        => const FlutterSecureStorage().read(
+            key: '$_googleCalendarEventIdKey$date$amPm${isHour ? '$isHour' : ''}');
 
   /// GoogleカレンダーイベントIDの書き込み
-  static Future writeGoogleCalendarEventId({required final String eventId, required final DateTime date, final AmPm? amPm})
-      => const FlutterSecureStorage().write(key: '$_googleCalendarEventIdKey$date$amPm', value: eventId);
+  static Future writeGoogleCalendarEventId({
+    required final String eventId,
+    required final DateTime date,
+    final AmPm? amPm,
+    final bool isHour = false})
+        => const FlutterSecureStorage().write(
+            key: '$_googleCalendarEventIdKey$date$amPm${isHour ? '$isHour' : ''}',
+            value: eventId);
 
   /// GoogleカレンダーイベントIDの削除
-  static Future deleteGoogleCalendarEventId({required final DateTime date, final AmPm? amPm})
-      => const FlutterSecureStorage().delete(key: '$_googleCalendarEventIdKey$date$amPm');
+  static Future deleteGoogleCalendarEventId({
+    required final DateTime date,
+    final AmPm? amPm,
+    final bool isHour = false})
+        => const FlutterSecureStorage().delete(
+            key: '$_googleCalendarEventIdKey$date$amPm${isHour ? '$isHour' : ''}');
 }

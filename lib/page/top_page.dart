@@ -3,7 +3,6 @@ import 'package:paid_vacation_manager/data/paid_vacation_manager.dart';
 import 'package:paid_vacation_manager/page/add_page.dart';
 import 'package:paid_vacation_manager/page/display_page.dart';
 import 'package:paid_vacation_manager/utility/api/local_storage_manager.dart';
-import 'package:paid_vacation_manager/utility/configure.dart';
 
 /// ローカルストレージから有給情報の読み出し、登録情報の内容を受けて画面遷移を行う
 class TopPage extends StatefulWidget {
@@ -30,7 +29,6 @@ class _TopPageState extends State<TopPage> {
         return;
       } else {
         // 登録情報がある場合
-        await Configure.instance.loadIsSyncGoogleCalendar();
         Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => DisplayPage(manager: manager)),

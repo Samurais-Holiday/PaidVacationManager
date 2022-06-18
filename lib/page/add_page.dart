@@ -12,9 +12,8 @@ import 'package:paid_vacation_manager/utility/api/local_storage_manager.dart';
 
 /// 新しく付与された有給情報を追加する
 class AddPage extends StatefulWidget {
-  const AddPage({Key? key, required this.manager, this.isCarriedOverDaysMode = false}) : super(key: key);
+  const AddPage({Key? key, required this.manager}) : super(key: key);
   final PaidVacationManager manager;
-  final bool isCarriedOverDaysMode;
 
   @override
   State<StatefulWidget> createState() => _AddPageState();
@@ -35,7 +34,7 @@ class _AddPageState extends State<AddPage> {
     return Scaffold(
       backgroundColor: Theme.of(context).backgroundColor,
       appBar: AppBar(
-        title: Text(widget.isCarriedOverDaysMode ? '繰り越し日数の登録' : '付与日数の新規追加'),
+        title: const Text('付与日数の新規追加'),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -78,7 +77,7 @@ class _AddPageState extends State<AddPage> {
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           style: Theme.of(context).textTheme.headline4,
           decoration: InputDecoration(
-              labelText: widget.isCarriedOverDaysMode ? '繰り越し日数 *' : '有給付与日数 *',
+              labelText: '付与日数 or 繰越日数 *',
               labelStyle: Theme.of(context).textTheme.headline5,
           ),
           // エラー時処理
@@ -97,28 +96,13 @@ class _AddPageState extends State<AddPage> {
                 : null;
           },
         ),
-
-        if (!widget.isCarriedOverDaysMode)
-          Text(
-            '※ 繰り越し日数は含めない',
-            style: TextStyle(color: Theme.of(context).hintColor),
-          )
       ],
     );
   }
 
   /// 付与日入力フォーム
   Widget _inputGivenDateForm() {
-    return Column(
-      children: [
-        _createInputDateForm(isGivenDate: true),
-        if (widget.isCarriedOverDaysMode)
-          Text(
-            '※ 繰り越した日ではなく、付与された日を入力して下さい',
-            style: TextStyle(color: Theme.of(context).hintColor),
-          )
-      ],
-    );
+    return _createInputDateForm(isGivenDate: true);
   }
 
   /// 失効日入力フォーム
@@ -126,7 +110,7 @@ class _AddPageState extends State<AddPage> {
     return Column(
       children: [
         _createInputDateForm(isGivenDate: false),
-        Text('※ 最低でも2年間は有効が保証されます', style: TextStyle(color: Theme.of(context).hintColor),)
+        Text('※ 付与日から2年後以降である必要があります', style: TextStyle(color: Theme.of(context).hintColor),)
       ],
     );
   }
@@ -156,10 +140,11 @@ class _AddPageState extends State<AddPage> {
               setState(() {
                 if (isGivenDate) {
                   _givenYear = newYear;
+                  _lapseYear = newYear + 2;
                 } else {
                   _lapseYear = newYear;
                 }
-                _invalidInputDateThenReset(isGivenDate);
+                _invalidDateThenReset(isGivenDate);
               });
             },
           ),
@@ -168,10 +153,10 @@ class _AddPageState extends State<AddPage> {
           DropdownButton<int>(
             dropdownColor: Theme.of(context).backgroundColor,
             items: isGivenDate
-                ? Lists.convertNumListToWidgetList(context, Lists.create(1, 12), 2) // 付与日は全部表示
+                ? Lists.convertNumListToWidgetList(context, Lists.create(1, 12), 2)
                 : _lapseYear == _givenYear+2
-                    ? Lists.convertNumListToWidgetList(context, Lists.create(_givenMonth, 12), 2) // 失効日かつ、付与日から2年後の場合は下限を設ける
-                    : Lists.convertNumListToWidgetList(context, Lists.create(1, 12), 2), // 失効日が付与日から2年後以外は下限を設けない
+                    ? Lists.convertNumListToWidgetList(context, Lists.create(_givenMonth, 12), 2) // 失効日かつ、付与日から2年後の場合、制限を設ける
+                    : Lists.convertNumListToWidgetList(context, Lists.create(1, 12), 2),
             value: isGivenDate ? _givenMonth : _lapseMonth,
             style: Theme.of(context).textTheme.headline5,
             underline: Container(height: 2, color: Colors.black45),
@@ -183,10 +168,11 @@ class _AddPageState extends State<AddPage> {
               setState(() {
                 if (isGivenDate) {
                   _givenMonth = newMonth;
+                  _lapseMonth = newMonth;
                 } else {
                   _lapseMonth = newMonth;
                 }
-                _invalidInputDateThenReset(isGivenDate);
+                _invalidDateThenReset(isGivenDate);
               });
             },
           ),
@@ -195,9 +181,9 @@ class _AddPageState extends State<AddPage> {
           DropdownButton<int>(
             dropdownColor: Theme.of(context).backgroundColor,
             items: isGivenDate
-                ? Lists.convertNumListToWidgetList(context, Lists.create(1, DateTimes.endOfMonth[_givenMonth]!), 2) // 付与日の場合全部表示
+                ? Lists.convertNumListToWidgetList(context, Lists.create(1, DateTimes.endOfMonth[_givenMonth]!), 2)
                 : _lapseYear == _givenYear+2 && _lapseMonth == _givenMonth
-                    ? Lists.convertNumListToWidgetList(context, Lists.create(_givenDay, DateTimes.endOfMonth[_lapseMonth]!), 2)
+                    ? Lists.convertNumListToWidgetList(context, Lists.create(_givenDay, DateTimes.endOfMonth[_lapseMonth]!), 2) // 制限を設ける
                     : Lists.convertNumListToWidgetList(context, Lists.create(1, DateTimes.endOfMonth[_lapseMonth]!), 2),
             value: isGivenDate ? _givenDay : _lapseDay,
             style: Theme.of(context).textTheme.headline5,
@@ -210,10 +196,11 @@ class _AddPageState extends State<AddPage> {
               setState(() {
                 if (isGivenDate) {
                   _givenDay = newDay;
+                  _lapseDay = newDay;
                 } else {
                   _lapseDay = newDay;
                 }
-                _invalidInputDateThenReset(isGivenDate);
+                _invalidDateThenReset(isGivenDate);
               });
             },
           ),
@@ -223,7 +210,7 @@ class _AddPageState extends State<AddPage> {
   }
 
   /// 付与日と失効日の関係が2年未満の場合に再設定する
-  void _invalidInputDateThenReset(bool isGivenDate) {
+  void _invalidDateThenReset(bool isGivenDate) {
     if (_invalidInputDate()) {
       if (isGivenDate) {
         _lapseYear = _givenYear+2;

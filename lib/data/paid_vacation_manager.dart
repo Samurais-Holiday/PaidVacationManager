@@ -1,8 +1,9 @@
 import 'dart:developer';
 
-import 'package:analyzer_plugin/utilities/pair.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_info.dart';
+import 'package:paid_vacation_manager/data/paid_vacation_time.dart';
 import 'package:paid_vacation_manager/enum/am_pm.dart';
+import 'package:tuple/tuple.dart';
 
 /// 全ての有給データを管理するクラス
 class PaidVacationManager {
@@ -18,9 +19,6 @@ class PaidVacationManager {
     return null;
   }
 
-  /// 有給情報のリストが空か
-  bool get isEmpty => _paidVacationInfoList.isEmpty;
-
   /// 新しく付与された有給情報を追加
   /// 付与日が同じデータがある場合は追加しない
   bool addInfo(PaidVacationInfo info) {
@@ -35,7 +33,7 @@ class PaidVacationManager {
     return true;
   }
 
-  /// 有給上場を削除する
+  /// 有給情報を削除する
   /// データがなかった場合false
   bool delete({required DateTime givenDate}) {
     for (var currentInfo in _paidVacationInfoList) {
@@ -52,7 +50,7 @@ class PaidVacationManager {
 
   /// 付与日数修正
   /// 付与日でアクセス
-  bool setGivenDays(DateTime date, int days) {
+  bool setGivenDays(final DateTime date, final int days) {
    final info = paidVacationInfo(date);
    return info != null
        ? info.setGivenDays(days)
@@ -73,58 +71,91 @@ class PaidVacationManager {
 
   /// 有給を取得する
   /// 半休の場合は amPm を指定すること
+  /// 時間単位の場合は hours を指定すること
+  /// 他の年度の PaidVacationInfo に重複する取得データがあるかチェックを行う
   bool acquisitionVacation({
       required final DateTime givenDate,
       required final DateTime acquisitionDate,
       final AmPm? amPm,
+      final int? hours,
       final String reason = '',}) {
-    // 何れかの PaidVacationInfo に取得日が重複するのデータがあった場合は設定しない
     for (var paidVacationInfo in _paidVacationInfoList) {
       // 設定先の PaidVacationInfo は飛ばす
       if (paidVacationInfo.givenDate == givenDate) {
         continue;
       }
       final keys = paidVacationInfo.sortedAcquisitionDate().keys;
-      if (amPm == null) {
-        // 全休の場合は付与日が一致で設定失敗
-        final guard = Pair(DateTime(0), null); // 番兵
-        if (keys.firstWhere((key) => key.first == acquisitionDate, orElse: () => guard) != guard) {
+      if (amPm == null && hours == null) {
+        // 全休の場合は付与日が同じものがあれば設定失敗
+        final guard = Tuple3(DateTime(0), null, null); // 番兵
+        if (keys.firstWhere((key) => key.item1 == acquisitionDate, orElse: () => guard) != guard) {
           log('$acquisitionVacation\n取得失敗 (取得日が重複しているデータがあります 取得日: $acquisitionDate)');
           return false;
         }
-      } else {
-        // 半休の場合は午前/午後まで一致で設定失敗
-        if (keys.contains(Pair(acquisitionDate, amPm))) {
+      } else if (amPm != null) {
+        // 半休の場合
+        if (keys.contains(Tuple3(acquisitionDate, null, null)) // 全休と重なるか
+            || keys.contains(Tuple3(acquisitionDate, amPm, null))) { // 他の半休と重なるか
           log('$acquisitionVacation\n取得失敗 (取得日が重複しているデータがあります 取得日: $acquisitionDate ($amPm))');
+          return false;
+        }
+      } else if (hours != null) {
+        // 時間単位の場合は全休があれば設定失敗
+        if (keys.contains(Tuple3(acquisitionDate, null, null))) {
+          log('$acquisitionVacation\n取得失敗 (取得日が重複しているデータがあります 取得日: $acquisitionDate)');
           return false;
         }
       }
     }
+    // 取得先の有給情報を参照
     final targetInfo = paidVacationInfo(givenDate);
     if (targetInfo == null) {
       log('$acquisitionVacation\n取得失敗 (設定先のデータが見つかりませんでした)');
       return false;
     }
-    return targetInfo.acquisitionVacation(date: acquisitionDate, amPm: amPm, reason: reason);
+    return targetInfo.acquisitionVacation(
+        date: acquisitionDate,
+        amPm: amPm,
+        hours: hours,
+        reason: reason);
   }
 
   /// 有給取得データ削除
-  bool deleteAcquisitionInfo(DateTime date, AmPm? amPm) {
-    for (var currentInfo in _paidVacationInfoList) {
-      if (currentInfo.deleteAcquisitionInfo(date, amPm)) {
-        return true;
-      }
+  bool deleteAcquisitionInfo({
+      required final DateTime givenDate,
+      required final DateTime acquisitionDate,
+      AmPm? amPm,
+      bool isHour = false }) {
+    final targetInfo = paidVacationInfo(givenDate);
+    if (targetInfo == null) {
+      return false;
     }
-    return false;
+    return targetInfo.deleteAcquisitionInfo(
+        date: acquisitionDate,
+        amPm: amPm,
+        isHour: isHour);
   }
+
+  /// 指定した期間の時間単位での取得時間を取得
+  /// 引数の有給情報の付与日から、次の付与があればその付与日までの取得時間を返却
+  /// 次の付与がない場合は、失効日までの取得時間を返却
+  int acquisitionHours(PaidVacationInfo info) {
+    int returnHours = 0;
+    final endDate = nextInfo(info)?.givenDate ?? info.lapseDate;
+    for (var element in _paidVacationInfoList) {
+      returnHours += element.acquisitionHours(beginDate: info.givenDate, endDate: endDate);
+    }
+    return returnHours;
+  }
+
   /// 指定したデータの残りの日数を取得
-  double? remainingDays(DateTime givenDate) {
+  PaidVacationTime? remainingDays(DateTime givenDate) {
     final targetInfo = paidVacationInfo(givenDate);
     return targetInfo?.remainingDays;
   }
 
   /// 1つ後ろのデータを取得する
-  PaidVacationInfo? backInfo(PaidVacationInfo info) {
+  PaidVacationInfo? prevInfo(PaidVacationInfo info) {
     PaidVacationInfo? backInfo;
     for (var currentInfo in _paidVacationInfoList) {
       if (currentInfo.givenDate.isBefore(info.givenDate)
@@ -149,59 +180,33 @@ class PaidVacationManager {
 
   /// 表示画面で最初に表示するデータを取得する
   PaidVacationInfo? initialDisplayInfo() {
-    PaidVacationInfo? initialInfo;
+    PaidVacationInfo? returnInfo;
     for (var currentInfo in _paidVacationInfoList) {
       // 初めのデータは必ず設定する
-      if (initialInfo == null) {
-        initialInfo = currentInfo;
+      if (returnInfo == null) {
+        returnInfo = currentInfo;
         continue;
       }
-      // initialInfo: 有給取得していないデータ
-      if (initialInfo.acquisitionTotal == 0) {
-        // currentInfo: 有給取得しているデータ
-        if (0 < currentInfo.acquisitionTotal) {
-          initialInfo = currentInfo;
+      // returnInfo: 有給取得していない
+      if (returnInfo.acquisitionTotal.isEmpty()) {
+        // currentInfo: 有給取得している
+        if (currentInfo.acquisitionTotal.isNotEmpty()) {
+          returnInfo = currentInfo;
         }
-        // currentInfo: 有給取得していない & 古いデータ
-        else if (currentInfo.givenDate.isBefore(initialInfo.givenDate)) {
-          initialInfo = currentInfo;
+        // currentInfo: 有給取得していない & 付与日が古い
+        else if (currentInfo.givenDate.isBefore(returnInfo.givenDate)) {
+          returnInfo = currentInfo;
         }
       }
-      // initialInfo: 有給取得しているデータ
+      // returnInfo: 有給取得している
       else {
-        // currentInfo: 有給取得している & 新しいデータ
-        if (0 < currentInfo.acquisitionTotal
-            && initialInfo.givenDate.isBefore(currentInfo.givenDate)) {
-          initialInfo = currentInfo;
+        // currentInfo: 有給取得している & 付与日が新しい
+        if (currentInfo.acquisitionTotal.isNotEmpty()
+            && returnInfo.givenDate.isBefore(currentInfo.givenDate)) {
+          returnInfo = currentInfo;
         }
       }
     }
-    return initialInfo;
-  }
-
-  /// 最も古い付与日を取得する
-  /// データが1つもない場合はnull
-  DateTime? beginDate() {
-    DateTime? beginDate;
-    for (var currentInfo in _paidVacationInfoList) {
-      if (beginDate == null
-          || currentInfo.givenDate.isBefore(beginDate)) {
-        beginDate = currentInfo.givenDate;
-      }
-    }
-    return beginDate;
-  }
-
-  /// 最後の失効日を取得
-  /// データが1つもない場合はnull
-  DateTime? endDate() {
-    DateTime? endDate;
-    for (var currentInfo in _paidVacationInfoList) {
-      if (endDate == null
-          || endDate.isBefore(currentInfo.lapseDate)) {
-        endDate = currentInfo.lapseDate;
-      }
-    }
-    return endDate;
+    return returnInfo;
   }
 }

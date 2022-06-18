@@ -5,7 +5,7 @@ import 'package:paid_vacation_manager/utility/api/ad_banner.dart';
 import 'package:paid_vacation_manager/utility/api/google_calendar.dart';
 import 'package:paid_vacation_manager/utility/api/google_sign_in_manager.dart';
 import 'package:paid_vacation_manager/utility/api/local_storage_manager.dart';
-import 'package:paid_vacation_manager/utility/configure.dart';
+import 'package:paid_vacation_manager/config/configure.dart';
 
 /// アプリの設定画面
 class ConfigurationPage extends StatefulWidget {

@@ -20,22 +20,6 @@ void main() {
     expect(info.acquisitionList[testDate], firstReason);
   });
 
-  test('update', (){
-    final info = AcquisitionOneDayInfo();
-    final testDate = DateTime(2022, 4, 1);
-    info.add(date: testDate);
-    const updateReason = '更新';
-    expect(info.upDate(date: testDate, reason: updateReason), true);
-    expect(info.acquisitionList[testDate], updateReason);
-  });
-
-  test('update_対象データ無し', (){
-    final info = AcquisitionOneDayInfo();
-    final testDate = DateTime(2022, 4, 1);
-    expect(info.upDate(date: testDate, reason: '対象データなし'), false);
-    expect(info.acquisitionList[testDate], null);
-  });
-
   test('delete', (){
     final info = AcquisitionOneDayInfo();
     final testDate = DateTime(2022, 4, 1);
