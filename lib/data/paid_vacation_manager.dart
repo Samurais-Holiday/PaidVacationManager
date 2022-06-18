@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:paid_vacation_manager/config/configure.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_info.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_time.dart';
 import 'package:paid_vacation_manager/enum/am_pm.dart';
@@ -72,52 +73,64 @@ class PaidVacationManager {
   /// 有給を取得する
   /// 半休の場合は amPm を指定すること
   /// 時間単位の場合は hours を指定すること
-  /// 他の年度の PaidVacationInfo に重複する取得データがあるかチェックを行う
   bool acquisitionVacation({
       required final DateTime givenDate,
       required final DateTime acquisitionDate,
       final AmPm? amPm,
       final int? hours,
       final String reason = '',}) {
-    for (var paidVacationInfo in _paidVacationInfoList) {
-      // 設定先の PaidVacationInfo は飛ばす
-      if (paidVacationInfo.givenDate == givenDate) {
-        continue;
-      }
-      final keys = paidVacationInfo.sortedAcquisitionDate().keys;
-      if (amPm == null && hours == null) {
-        // 全休の場合は付与日が同じものがあれば設定失敗
-        final guard = Tuple3(DateTime(0), null, null); // 番兵
-        if (keys.firstWhere((key) => key.item1 == acquisitionDate, orElse: () => guard) != guard) {
-          log('$acquisitionVacation\n取得失敗 (取得日が重複しているデータがあります 取得日: $acquisitionDate)');
-          return false;
-        }
-      } else if (amPm != null) {
-        // 半休の場合
-        if (keys.contains(Tuple3(acquisitionDate, null, null)) // 全休と重なるか
-            || keys.contains(Tuple3(acquisitionDate, amPm, null))) { // 他の半休と重なるか
-          log('$acquisitionVacation\n取得失敗 (取得日が重複しているデータがあります 取得日: $acquisitionDate ($amPm))');
-          return false;
-        }
-      } else if (hours != null) {
-        // 時間単位の場合は全休があれば設定失敗
-        if (keys.contains(Tuple3(acquisitionDate, null, null))) {
-          log('$acquisitionVacation\n取得失敗 (取得日が重複しているデータがあります 取得日: $acquisitionDate)');
-          return false;
-        }
-      }
-    }
     // 取得先の有給情報を参照
     final targetInfo = paidVacationInfo(givenDate);
     if (targetInfo == null) {
       log('$acquisitionVacation\n取得失敗 (設定先のデータが見つかりませんでした)');
       return false;
     }
-    return targetInfo.acquisitionVacation(
-        date: acquisitionDate,
-        amPm: amPm,
-        hours: hours,
-        reason: reason);
+    if (hours != null
+        && 5*Configure.instance.hoursPerOneDay < acquisitionHours(targetInfo)+hours) {
+      log('$acquisitionVacation\n取得失敗 (5日を超えて取得しようとしています'
+          ' (${acquisitionHours(targetInfo) + hours} H))');
+      return false;
+    }
+    if (_isNotOverlappingAnyDate(acquisitionDate: acquisitionDate, amPm: amPm, hours: hours)) {
+      return targetInfo.acquisitionVacation(
+          date: acquisitionDate,
+          amPm: amPm,
+          hours: hours,
+          reason: reason);
+    } else {
+      log('$acquisitionVacation\n取得失敗 (取得日が重複しているデータがあります 取得日: $acquisitionDate ($amPm/$hours H))');
+      return false;
+    }
+  }
+
+  /// 取得日が各年度の取得日と重複していないか
+  /// 重複しない場合は true, 重複する場合は false
+  bool _isNotOverlappingAnyDate({
+      required final DateTime acquisitionDate,
+      final AmPm? amPm,
+      final int? hours, }) {
+    for (var currentInfo in _paidVacationInfoList) {
+      final keys = currentInfo.sortedAcquisitionDate().keys;
+      if (amPm == null && hours == null) {
+        // 全休の場合は付与日が同じものがあれば設定失敗
+        final guard = Tuple3(DateTime(0), null, null); // 番兵
+        if (keys.firstWhere((key) => key.item1 == acquisitionDate, orElse: () => guard) != guard) {
+          return false;
+        }
+      } else if (amPm != null) {
+        // 半休の場合
+        if (keys.contains(Tuple3(acquisitionDate, null, null)) // 全休と重なるか
+            || keys.contains(Tuple3(acquisitionDate, amPm, null))) { // 他の半休と重なるか
+          return false;
+        }
+      } else if (hours != null) {
+        // 時間単位の場合は全休があれば設定失敗
+        if (keys.contains(Tuple3(acquisitionDate, null, null))) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   /// 有給取得データ削除

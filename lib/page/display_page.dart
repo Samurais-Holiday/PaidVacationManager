@@ -168,19 +168,6 @@ class _DisplayPageState extends State<DisplayPage> {
     return _displayDaysText(_displayInfo.givenDays.days, '付与日数');
   }
 
-  /// 時間単位での取得時間
-  Widget _acquisitionHoursWidget() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Text('※時間単位での取得: ${widget.manager.acquisitionHours(_displayInfo)} 時間'
-            ' (最大 ${(5*Configure.instance.hoursPerHalf).toStringAsFixed(1)} 時間まで)',
-          style: Theme.of(context).textTheme.subtitle1,)
-      ],
-    );
-  }
-
   /// 取得日数・取得時間を表示する
   Widget _acquisitionDaysWidget() {
     return Row(
@@ -203,6 +190,19 @@ class _DisplayPageState extends State<DisplayPage> {
         _displayDaysText(_displayInfo.remainingDays.days, '残り日数'),
         if (_displayInfo.remainingDays.hours != 0)
           _displayHourText(_displayInfo.remainingDays.hours),
+      ],
+    );
+  }
+
+  /// 時間単位での取得時間
+  Widget _acquisitionHoursWidget() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text('※時間単位での取得: ${widget.manager.acquisitionHours(_displayInfo)} 時間'
+            ' (最大 ${(5*Configure.instance.hoursPerOneDay)} 時間まで)',
+          style: Theme.of(context).textTheme.subtitle1,)
       ],
     );
   }

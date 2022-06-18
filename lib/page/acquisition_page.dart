@@ -130,7 +130,7 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
             ),
             const AdBannerWidget(),
             Container(
-              margin: const EdgeInsets.all(15),
+              margin: const EdgeInsets.all(10),
               child: _navigatePageButton(),
             ),
           ],

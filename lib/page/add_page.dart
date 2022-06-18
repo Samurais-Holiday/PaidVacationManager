@@ -42,7 +42,7 @@ class _AddPageState extends State<AddPage> {
           children: [
             const AdBannerWidget(),
             Container(
-              margin: const EdgeInsets.only(left: 30, top: 30, right: 30, bottom: 20),
+              margin: const EdgeInsets.only(left: 30, top: 20, right: 30, bottom: 20),
               child: _inputGivenDaysForm(),
             ),
             Container(
@@ -53,8 +53,9 @@ class _AddPageState extends State<AddPage> {
               margin: const EdgeInsets.all(10),
               child: _inputLapseDateForm(),
             ),
+            const AdBannerWidget(),
             Container(
-              margin: const EdgeInsets.all(30),
+              margin: const EdgeInsets.all(10),
               child: _registrationButton(),
             )
           ],
