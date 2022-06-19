@@ -22,14 +22,18 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
     _banner = _createBanner(AdSize.fullBanner);
   }
 
+  // @override
+  // Widget build(BuildContext context) {
+  //   return Container(
+  //     color: widget.backgroundColor ?? Theme.of(context).backgroundColor,
+  //     width: _banner.size.width.toDouble(),
+  //     height: _banner.size.height.toDouble(),
+  //     child: AdWidget(ad: _banner),
+  //   );
+  // }
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: widget.backgroundColor ?? Theme.of(context).backgroundColor,
-      width: _banner.size.width.toDouble(),
-      height: _banner.size.height.toDouble(),
-      child: AdWidget(ad: _banner),
-    );
+    return const SizedBox(height: 1.0, width: 1.0,);
   }
 
   @override
