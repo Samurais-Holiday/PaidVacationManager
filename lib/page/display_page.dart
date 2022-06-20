@@ -458,11 +458,11 @@ class _DisplayPageState extends State<DisplayPage> {
         '/${date.day.toString().padLeft(2, '0')}';
     // 半休の場合
     if (amPm != null) {
-      return dateStr + (amPm == AmPm.am ? '  (午前)' : '  (午前)');
+      return dateStr + (amPm == AmPm.am ? '  (午前)' : '  (午後)');
     }
     // 時間単位での取得の場合
     else if (hours != null) {
-      return dateStr + '  ($hours 時間)';
+      return dateStr + '  ($hours時間)';
     }
     // 全休の場合
     else {
