@@ -179,12 +179,12 @@ class PaidVacationInfo {
   bool _acquisitionHalf({required final DateTime date, required final AmPm amPm, final String reason = ''}) {
     // 全休の取得情報に取得日が重なるデータがあるか
     if (_oneDayInfo.acquisitionList.keys.contains(date)) {
-      log('${_acquisitionHalf.toString()}\n半休取得失敗 (全休に取得日が重なるデータがあります (取得日: ${date.toString()}))');
+      log('$_acquisitionHalf\n半休取得失敗 (全休に取得日が重なるデータがあります (取得日: ${date.toString()}))');
       return false;
     }
     // 残り日数が足りるか
     if (remainingDays < PaidVacationTime(hours: Configure.instance.hoursPerHalf)) {
-      log('${_acquisitionHalf.toString()}\n半休取得失敗 (残り日数が足りません (actual: $remainingDays, expected: 0.5~))');
+      log('$_acquisitionHalf\n半休取得失敗 (残り日数が足りません (actual: $remainingDays, expected: 0.5~))');
       return false;
     }
     return _halfInfo.add(date: date, amPm: amPm, reason: reason);

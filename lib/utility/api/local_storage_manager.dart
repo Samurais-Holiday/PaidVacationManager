@@ -77,8 +77,8 @@ class LocalStorageManager {
   /// key: GivenDaysInfo + 付与日, value: 失効日 + 付与日数
   static Future writeGivenDaysInfo(GivenDaysInfo info)
       => const FlutterSecureStorage().write(
-            key: _givenDaysInfoKey + info.givenDate.toString(),
-            value: info.lapseDate.toString() + info.givenDays.toString());
+            key: '$_givenDaysInfoKey${info.givenDate}',
+            value: '${info.lapseDate}${info.givenDays.days}');
 
   /// PaidVacationManagerに有給取得情報を設定する
   /// 引数 manager は out引数

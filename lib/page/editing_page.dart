@@ -29,7 +29,7 @@ class _EditingPageState extends State<EditingPage> {
   @override
   void initState() {
     super.initState();
-    _givenDaysController = TextEditingController(text: widget.manager.paidVacationInfo(widget.givenDate)!.givenDays.toString());
+    _givenDaysController = TextEditingController(text: widget.manager.paidVacationInfo(widget.givenDate)!.givenDays.days.toString());
     _lapseYear = widget.givenDate.year + 2;
     _lapseMonth = widget.givenDate.month;
     _lapseDay = widget.givenDate.day;
