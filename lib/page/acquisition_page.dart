@@ -412,7 +412,7 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
                     givenDate: _editingInfo.givenDate,
                     prevDate: widget.initialDate!, newDate: newDate,
                     prevAmPm: widget.initialAmPm, newAmPm: _isHalfDay ? _amPm : null,
-                    isPrevIsHour: widget.initialHours != null, newHours: _hours,
+                    isPrevIsHour: widget.initialHours != null, newHours: _isHour ? _hours : null,
                     reason: reason);
                 // 同期設定がONの場合は、Googleカレンダーの予定を更新する
                 if (Configure.instance.isSyncGoogleCalendar) {
