@@ -1,5 +1,6 @@
-import 'dart:developer';
+import 'dart:developer' as dev;
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -10,8 +11,10 @@ class AdInterstitial {
   static final _adInterstitial = AdInterstitial._internal();
   static AdInterstitial get instance => _adInterstitial;
 
-  /// プライベートコンストラクタ(外部からデフォルトコンストラクタは呼べなくなる)
-  AdInterstitial._internal();
+  /// プライベートコンストラクタ
+  AdInterstitial._internal() {
+    MobileAds.instance.setAppMuted(true);
+  }
 
   /// InterstitialAdのインスタンス
   InterstitialAd? _ad;
@@ -22,6 +25,10 @@ class AdInterstitial {
 
   /// 広告を表示する
   Future show() async {
+    // AdSenseに広告の時間が長いと怒られたので、表示する頻度を落とす
+    if (math.Random().nextInt(10) <= 6) {
+      return;
+    }
     if (!_isLoaded) {
       await _load();
     }
@@ -52,7 +59,7 @@ class AdInterstitial {
         onAdFailedToLoad: (error) async {
           _ad = null;
           _loadFailedCount++;
-          log('インタースティシャル広告の読込みに失敗 ($_loadFailedCount回目)');
+          dev.log('インタースティシャル広告の読込みに失敗 ($_loadFailedCount回目)');
           if (_loadFailedCount < 5) {
             await _load();
           }
