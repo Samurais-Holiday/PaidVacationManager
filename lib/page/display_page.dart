@@ -51,7 +51,7 @@ class _DisplayPageState extends State<DisplayPage> {
     AdInterstitial.instance.show();
     // レビュー依頼を表示
     if (_displayInfo.sortedAcquisitionDate().length % 5 == 0) {
-      Reviewer.requestShow();
+      Reviewer.requestShow(context: context);
     }
   }
 
@@ -104,7 +104,7 @@ class _DisplayPageState extends State<DisplayPage> {
           ListTile(
               leading: const Icon(Icons.rate_review, color: Colors.white,),
               title: Text('レビューを送信する', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),),
-              onTap: Reviewer.show
+              onTap: () { Reviewer.show(context: context); }
           ),
           ListTile(
             leading: const Icon(Icons.settings, color: Colors.white),
