@@ -346,7 +346,7 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
       children: [
         DropdownButton<int>(
           dropdownColor: Theme.of(context).backgroundColor,
-          items: Lists.convertNumListToWidgetList(context, Lists.create(1, 8)),
+          items: Lists.convertNumListToWidgetList(context, Lists.create(0, 8)),
           value: _hours,
           style: Theme.of(context).textTheme.headline5,
           underline: Container(height: 2, color: Colors.black45),
@@ -373,7 +373,7 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
       maxLines: null,
       style: Theme.of(context).textTheme.headline5,
       decoration: InputDecoration(
-        label: Text('取得理由', style: Theme.of(context).textTheme.headline6),
+        label: Text('memo', style: Theme.of(context).textTheme.headline6),
       ),
     );
   }
@@ -388,7 +388,7 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
         ElevatedButton(
           child: Text('キャンセル', style: Theme.of(context).textTheme.subtitle1?.copyWith(color: Colors.white),),
           onPressed: () => Navigator.pop(context),
-          style: ElevatedButton.styleFrom(primary: Theme.of(context).errorColor),
+          style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).errorColor),
         ),
         ElevatedButton(
           child: Text(
