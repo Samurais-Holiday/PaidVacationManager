@@ -20,6 +20,7 @@ class LocalStorageManager {
   static const _acquisitionHourInfoKey = 'acquisitionHourInfo';
   static const _isSyncGoogleCalendarKey = 'IsSyncGoogleCalendar';
   static const _googleCalendarEventIdKey = 'GoogleCalendarEventId';
+  static const _latestRequestReviewDateKey = 'LatestRequestReviewDate';
 
   /// 区切り文字
   static const _splitChar = '@&%#';
@@ -372,4 +373,16 @@ class LocalStorageManager {
     final bool isHour = false})
         => const FlutterSecureStorage().delete(
             key: '$_googleCalendarEventIdKey$date$amPm${isHour ? '$isHour' : ''}');
+
+  /// レビュー依頼を最後にした日付を書き込む
+  static Future<void> writeLatestRequestReviewDate(DateTime date)
+      => const FlutterSecureStorage().write(key: _latestRequestReviewDateKey, value: date.toString());
+
+  /// レビュー依頼を最後にした日付を取得
+  static Future<DateTime?> readLatestRequestReviewDate() async {
+    final String? dateStr = await const FlutterSecureStorage().read(key: _latestRequestReviewDateKey);
+    return dateStr != null
+        ? DateTime.tryParse(dateStr)
+        : null;
+  }
 }

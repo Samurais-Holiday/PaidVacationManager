@@ -13,6 +13,7 @@ import 'package:paid_vacation_manager/page/editing_page.dart';
 import 'package:paid_vacation_manager/utility/api/ad_banner.dart';
 import 'package:paid_vacation_manager/utility/api/ad_interstitial.dart';
 import 'package:paid_vacation_manager/utility/api/local_storage_manager.dart';
+import 'package:paid_vacation_manager/utility/api/reviewer.dart';
 import 'package:paid_vacation_manager/utility/api/url_manager.dart';
 
 /// 有給情報表示ページ
@@ -48,6 +49,10 @@ class _DisplayPageState extends State<DisplayPage> {
     _displayInfo = displayInfo;
     // 広告を表示
     AdInterstitial.instance.show();
+    // レビュー依頼を表示
+    if (_displayInfo.sortedAcquisitionDate().length % 5 == 0) {
+      Reviewer.requestShow();
+    }
   }
 
   @override
@@ -95,6 +100,11 @@ class _DisplayPageState extends State<DisplayPage> {
                     MaterialPageRoute(builder: (_) => AddPage(manager: widget.manager))
                 );
               }
+          ),
+          ListTile(
+              leading: const Icon(Icons.rate_review, color: Colors.white,),
+              title: Text('レビューを送信する', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),),
+              onTap: Reviewer.show
           ),
           ListTile(
             leading: const Icon(Icons.settings, color: Colors.white),
@@ -259,7 +269,7 @@ class _DisplayPageState extends State<DisplayPage> {
         _showConfirmationDialog();
       },
       style: ElevatedButton.styleFrom(
-        primary: Theme.of(context).errorColor,
+        backgroundColor: Theme.of(context).errorColor,
       ),
       label: const Text(''),
       icon: const Icon(Icons.delete),
