@@ -133,8 +133,9 @@ void main() {
 }
 
 class TestUtility {
+  /// TODO: Configureクラスにてストレージにアクセスしようとするため、リファクタor回避策の検討が必要
   static void addAndCheck(bool expected, PaidVacationManager target, DateTime givenDate, [int givenDays = 20]) {
-    expect(target.addInfo(PaidVacationInfo(GivenDaysInfo(givenDays, givenDate))), expected);
+    expect(target.addInfo(PaidVacationInfo(GivenDaysInfo(givenDays, givenDate, givenDate.add(const Duration(days: 365*2))))), expected);
   }
 
   static void checkAcquisitionDays(num expectedDays, PaidVacationManager target, DateTime targetInfoGivenDate) {
