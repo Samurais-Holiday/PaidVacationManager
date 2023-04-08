@@ -397,7 +397,7 @@ class _DisplayPageState extends State<DisplayPage> {
           background: Container(color: Theme.of(context).errorColor,),
           child: Column(
             children: [
-              if (index == 0 || index % _bannerPeriod == 0)
+              if (!Configure.instance.hideAd && (index == 0 || index % _bannerPeriod == 0))
                 AdBannerWidget(backgroundColor: Theme.of(context).primaryColor,),
               ListTile(
                 title: Text(_createListTitleStr(date: date, amPm: amPm, hours: hours),

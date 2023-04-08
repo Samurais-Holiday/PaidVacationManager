@@ -112,7 +112,8 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const AdBannerWidget(),
+            if (!Configure.instance.hideAd)
+              const AdBannerWidget(),
             Container(
               margin: const EdgeInsets.only(left: 10, top: 50, right: 10, bottom: 10),
               child: _dateForm(),
@@ -128,7 +129,8 @@ class _AcquisitionPageState extends State<AcquisitionPage> {
               margin: const EdgeInsets.only(left: 30, top: 10, right: 30, bottom: 10),
               child: _inputReasonForm(),
             ),
-            const AdBannerWidget(),
+            if (!Configure.instance.hideAd)
+              const AdBannerWidget(),
             Container(
               margin: const EdgeInsets.all(10),
               child: _navigatePageButton(),

@@ -3,14 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:paid_vacation_manager/config/configure.dart';
 import 'package:paid_vacation_manager/page/top_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  // 各初期化処理(ユーザビリティを重視するため、処理は非同期で行う)
+  // 各初期化処理
   MobileAds.instance.initialize(); // AdMob
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]); // 画面の向きを固定
   Firebase.initializeApp();  // Firebase
+  Configure.instance.load();
   runApp(const MyApp());
 }
 

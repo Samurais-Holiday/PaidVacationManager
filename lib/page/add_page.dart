@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:paid_vacation_manager/config/configure.dart';
 import 'package:paid_vacation_manager/data/given_days_info.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_info.dart';
 import 'package:paid_vacation_manager/data/paid_vacation_manager.dart';
@@ -40,7 +41,8 @@ class _AddPageState extends State<AddPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const AdBannerWidget(),
+            if (!Configure.instance.hideAd)
+              const AdBannerWidget(),
             Container(
               margin: const EdgeInsets.only(left: 30, top: 20, right: 30, bottom: 20),
               child: _inputGivenDaysForm(),
@@ -53,7 +55,8 @@ class _AddPageState extends State<AddPage> {
               margin: const EdgeInsets.all(10),
               child: _inputLapseDateForm(),
             ),
-            const AdBannerWidget(),
+            if (!Configure.instance.hideAd)
+              const AdBannerWidget(),
             Container(
               margin: const EdgeInsets.all(10),
               child: _registrationButton(),

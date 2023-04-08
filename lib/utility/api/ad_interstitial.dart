@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:paid_vacation_manager/config/configure.dart';
 
 /// AdMobのインタースティシャル広告を表示するクラス
 class AdInterstitial {
@@ -24,7 +25,10 @@ class AdInterstitial {
   var _loadFailedCount = 0;
 
   /// 広告を表示する
-  Future show() async {
+  Future<void> show() async {
+    if (Configure.instance.hideAd) {
+      return;
+    }
     // AdSenseに広告の時間が長いと怒られたので、表示する頻度を落とす
     if (math.Random().nextInt(10) <= 6) {
       return;

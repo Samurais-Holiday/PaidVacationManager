@@ -21,6 +21,7 @@ class LocalStorageManager {
   static const _isSyncGoogleCalendarKey = 'IsSyncGoogleCalendar';
   static const _googleCalendarEventIdKey = 'GoogleCalendarEventId';
   static const _latestRequestReviewDateKey = 'LatestRequestReviewDate';
+  static const _hideAdKey = "HideAd";
 
   /// 区切り文字
   static const _splitChar = '@&%#';
@@ -384,5 +385,15 @@ class LocalStorageManager {
     return dateStr != null
         ? DateTime.tryParse(dateStr)
         : null;
+  }
+
+  /// 広告非表示設定書き込み
+  static Future writeHideAd(bool hideAd)
+      => const FlutterSecureStorage().write(key: _hideAdKey, value: hideAd.toString());
+
+  /// 広告非表示設定読み込み
+  static Future<bool> readHideAd() async {
+    var hideAdStr = await const FlutterSecureStorage().read(key: _hideAdKey);
+    return hideAdStr != null && hideAdStr == true.toString();
   }
 }

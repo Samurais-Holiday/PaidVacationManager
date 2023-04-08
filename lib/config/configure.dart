@@ -10,10 +10,16 @@ class Configure {
   int hoursPerOneDay = 8;
   /// 半休の時間
   num get hoursPerHalf => hoursPerOneDay / 2;
+  /// 広告を非表示にするか
+  bool hideAd = false;
 
   /// プライベートコンストラクタ
-  Configure._internal() {
+  Configure._internal();
+
+  /// ストレージから値読み込み
+  Future<void> load() async {
     LocalStorageManager.readIsSyncGoogleCalendar().then((value) => isSyncGoogleCalendar = value);
+    LocalStorageManager.readHideAd().then((value) => hideAd = value);
   }
 
   /// インスタンス取得
