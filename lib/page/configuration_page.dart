@@ -72,12 +72,8 @@ class ConfigurationPageState extends State<ConfigurationPage> {
 
   /// 購入処理中に表示するWidget
   Widget _pendingWidget() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: const [
-        Text('そのままお待ちください'),
-        CircularProgressIndicator()
-      ],
+    return const Center(
+        child: CircularProgressIndicator()
     );
   }
 
