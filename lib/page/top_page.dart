@@ -46,7 +46,7 @@ class _TopPageState extends State<TopPage> {
         title: const Text('読込み中……'),
       ),
       body: const Center(
-        child: Text('読込み中……'),
+        child: CircularProgressIndicator(),
       ),
     );
   }

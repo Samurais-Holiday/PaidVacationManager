@@ -114,8 +114,11 @@ class _DisplayPageState extends State<DisplayPage> {
               Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const ConfigurationPage())
-
-              );
+              ).then((_) {
+                setState(() {
+                  // NOOP
+                });
+              });
             },
           ),
           ListTile(
