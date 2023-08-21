@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:in_app_review/in_app_review.dart';
-import 'package:paid_vacation_manager/utility/api/local_storage_manager.dart';
-import 'package:paid_vacation_manager/utility/information_dialog.dart';
+
+import '../../model/settings.dart';
 
 /// レビュー依頼の表示を行うクラス
 class Reviewer {
@@ -9,21 +9,18 @@ class Reviewer {
   static Duration duration = const Duration(days: 90);
 
   /// 特定の条件を満たした場合にレビュー依頼の表示を行う
-  static Future<void> requestShow({required BuildContext context}) async {
-    final DateTime? latestRequest = await LocalStorageManager.readLatestRequestReviewDate();
-    if (await InAppReview.instance.isAvailable()
-        && (latestRequest == null || DateTime.now().isAfter(latestRequest.add(duration)))) {
-      await show(context: context);
+  ///
+  /// 依頼成功trueを返却し、依頼失敗時はfalseを返却する
+  static Future<bool> requestShow({required BuildContext context, required Settings settings}) async {
+    if (!await InAppReview.instance.isAvailable()) {
+      return false;
     }
-  }
-
-  /// レビュー依頼の表示を行う
-  static Future<void> show({required BuildContext context}) async {
-    if (await InAppReview.instance.isAvailable()) {
-      await InAppReview.instance.requestReview();
-      await LocalStorageManager.writeLatestRequestReviewDate(DateTime.now());
-    } else {
-      InformationDialog.show(context: context, info: 'このデバイスではレビューの送信が出来ません');
+    final DateTime? latestRequest = settings.latestReviewRequest;
+    if (latestRequest != null && DateTime.now().isBefore(latestRequest.add(duration))) {
+      return false;
     }
+    InAppReview.instance.requestReview();
+    settings.latestReviewRequest = DateTime.now();
+    return true;
   }
 }

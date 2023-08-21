@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:paid_vacation_manager/enum/purchase_item.dart';
+import 'package:paid_vacation_manager/model/purchase_item.dart';
 
 /// アプリ内購入に関する機能を提供するクラス
 class InAppPurchaseService {
@@ -59,5 +59,12 @@ class InAppPurchaseService {
     }
     final PurchaseParam purchaseParam = PurchaseParam(productDetails: response.productDetails.first);
     return await InAppPurchase.instance.buyConsumable(purchaseParam: purchaseParam);
+  }
+
+  /// アイテムの値段取得
+  Future<String> price(PurchaseProductType type) async {
+    assert(productTypeToString.containsKey(type));
+    final response = await InAppPurchase.instance.queryProductDetails({ productTypeToString[type]! });
+    return response.productDetails.first.price;
   }
 }
