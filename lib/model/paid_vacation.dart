@@ -45,8 +45,9 @@ class PaidVacation implements Comparable<PaidVacation> {
     if (_acquisitions.isEmpty) {
       return false;
     }
-    final border = Date(_acquisitions.last.date.year - validYears).add(const Duration(days: 1));
-    return givenDays.start.isBefore(border) || _acquisitions.last.date.isBefore(givenDays.start);
+    final oldest = _acquisitions.first.date;
+    final beforeBorder = Date(oldest.year - validYears, oldest.month, oldest.day).add(const Duration(days: 1));
+    return givenDays.start.isBefore(beforeBorder) || givenDays.start.isAfter(_acquisitions.last.date);
   }
 
   /// 取得情報一覧
@@ -81,9 +82,10 @@ class PaidVacation implements Comparable<PaidVacation> {
       => _acquisitions.add(acquisition);
 
   /// 取得日が有効期間外か
-  bool _isOutOfPeriod(Acquisition acquisition, int validYears)
-      => acquisition.date.isBefore(_givenDays.start)
-          || acquisition.date.isAfter(Date(_givenDays.start.year + validYears));
+  bool _isOutOfPeriod(Acquisition acquisition, int validYears) {
+    final afterBorder = Date(_givenDays.start.year + validYears, _givenDays.start.month, _givenDays.start.day).subtract(const Duration(days: 1));
+    return acquisition.date.isBefore(_givenDays.start) || acquisition.date.isAfter(afterBorder);
+  }
 
   /// 取得時間が不正か
   bool _isInvalidDuration(PaidDuration target, num workingHours)

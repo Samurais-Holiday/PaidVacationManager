@@ -39,6 +39,9 @@ class Settings {
   /// 所定労働時間
   num get workingHours => _workingHours;
 
+  /// 有効期間
+  int get validYears => 2;
+
   /// 広告非表示設定取得
   bool get hideAd => _hideAd;
 

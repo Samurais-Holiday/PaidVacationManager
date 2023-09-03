@@ -33,4 +33,10 @@ class Date extends DateTime {
 
   /// 不同値比較
   bool isNotSame(Date other) => !isSame(other);
+
+  @override
+  Date add(Duration duration) => fromDateTime(super.add(duration));
+
+  @override
+  Date subtract(Duration duration) => fromDateTime(super.subtract(duration));
 }

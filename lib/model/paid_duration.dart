@@ -29,11 +29,7 @@ class PaidDuration {
     if (_hours == 0) {
       return _days;
     }
-    var result = _days + _hours ~/ workingHours.ceil();
-    if (_hours.isNegative) {
-      result--;
-    }
-    return result;
+    return _days + (_hours / workingHours.ceil()).floor();
   }
 
   /// 追加
@@ -50,6 +46,5 @@ class PaidDuration {
       => PaidDuration(days: _days - other._days, hours: _hours - other._hours);
 
   bool isCover(final PaidDuration other, [num workingHours = 8])
-      => other.days(workingHours) < days(workingHours)
-          || (days(workingHours) == other.days(workingHours) && other.hours(workingHours) <= hours(workingHours));
+      => (other._days + other._hours / workingHours) <= (_days + _hours / workingHours);
 }

@@ -173,10 +173,12 @@ class PaidVacationRepository {
 
   /// 付与日数情報保存
   /// key: GivenDaysInfo + 付与日, value: 失効日 + 付与日数
-  Future<void> writeGivenDays(GivenDays givenDays)
-      => _repository.write(
-          key: '${Keys.givenDays}${givenDays.start}',
-          value: '${givenDays.end}${givenDays.days}');
+  Future<void> writeGivenDays(GivenDays givenDays) {
+    final dummyLapse = Date(givenDays.start.year+2, givenDays.start.month, givenDays.start.day);
+    return _repository.write(
+        key: '${Keys.givenDays}${givenDays.start}',
+        value: '$dummyLapse${givenDays.days}');
+  }
 
   /// 有給取得情報保存
   Future<void> writeAcquisition({required Date givenDate, required Acquisition acquisition}) async {

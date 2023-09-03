@@ -159,7 +159,7 @@ class _PaidVacationSinglePageState extends State<PaidVacationSinglePage> {
   /// 有効期間
   Widget _period() {
     final givenDate = widget._paidVacation.givenDays.start;
-    final endDate = widget._paidVacation.givenDays.end;
+    final endDate = Date(givenDate.year + widget._settings.validYears, givenDate.month, givenDate.day);
     return Text(
       '${givenDate.year}/${givenDate.month}/${givenDate.day} ~ ${endDate.year}/${endDate.month}/${endDate.day}',
       style: Theme.of(context).textTheme.headlineSmall,

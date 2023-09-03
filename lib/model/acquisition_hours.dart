@@ -18,8 +18,13 @@ class AcquisitionHours extends Acquisition {
 
   /// 昇順定義
   @override
-  int? localCompareTo(final Acquisition other)
-      => other is AcquisitionHalf
-          ? other.localCompareTo(this)
+  int? localCompareTo(final Acquisition other) {
+    if (other is AcquisitionHalf) {
+      final amPmResult = other.localCompareTo(this);
+      return amPmResult != null
+          ? -amPmResult
           : null;
+    }
+    return null;
+  }
 }
