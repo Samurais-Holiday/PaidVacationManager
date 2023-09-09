@@ -23,7 +23,7 @@ class GoogleCalendar {
     // Googleサインインで認証済のHTTPクライアントを参照
     final client = await GoogleSignInManager.authenticatedClient;
     if (client == null) {
-      log('$createEvent\nイベント登録失敗: HTTP Client is null');
+      log('Authenticated Client is null');
       GoogleSignInManager.disconnect();
       return false;
     }
@@ -40,11 +40,11 @@ class GoogleCalendar {
     // Googleカレンダーへの登録
     await calendarApi.events.insert(event, 'primary').then((value) {
       if (value.status != 'confirmed') {
-        log('$createEvent\nイベント登録失敗: CalendarApi.insert is failed (${value.status})');
+        log('Failed to insert Google Calendar event (${value.status}).');
         return false;
       }
     });
-    log('Googleカレンダーにイベント追加成功(ID: $eventId)');
+    log('Succeed to insert Google Calendar event.');
     return true;
   }
 
@@ -62,7 +62,7 @@ class GoogleCalendar {
     // Googleサインインで認証済のHTTPクライアントを参照
     final client = await GoogleSignInManager.authenticatedClient;
     if (client == null) {
-      log('$createEvent\nイベント登録失敗: HTTP Client is null');
+      log('Authenticated Client is null');
       GoogleSignInManager.disconnect();
       return false;
     }
@@ -79,11 +79,11 @@ class GoogleCalendar {
     // 予定を更新
     await calendarApi.events.update(event, 'primary', eventId).then((value) {
       if (value.status != 'confirmed') {
-        log('$updateEvent\nイベント更新失敗: CalendarApi.update is failed (${value.status})');
+        log('Failed to update Google Calendar event (${value.status}).');
         return false;
       }
     });
-    log('Googleカレンダーのイベント更新成功(ID: $eventId)');
+    log('Succeed to update Google Calendar event.');
     return true;
   }
 
@@ -96,14 +96,14 @@ class GoogleCalendar {
     // Googleサインインで認証済のHTTPクライアントを参照
     final client = await GoogleSignInManager.authenticatedClient;
     if (client == null) {
-      log('$createEvent\n予定削除失敗: HTTP Client is null');
+      log('Authenticated Client is null');
       GoogleSignInManager.disconnect();
       return false;
     }
     // GoogleカレンダーAPIのインスタンスを生成
     final calendarApi = CalendarApi(client);
     calendarApi.events.delete('primary', eventId);
-    log('$deleteEvent\nカレンダーから予定を削除しました(ID: $eventId)');
+    log('Succeed to remove Google Calendar event.');
     return true;
   }
 }

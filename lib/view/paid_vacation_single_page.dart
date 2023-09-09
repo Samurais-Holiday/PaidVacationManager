@@ -123,6 +123,10 @@ class _PaidVacationSinglePageState extends State<PaidVacationSinglePage> {
         ),
         if (!widget._settings.hideAd)
           const AdBannerWidget(),
+        Container(
+          height: 2,
+          color: Theme.of(context).primaryColor,
+        ),
         Flexible(child: _acquisitionList()),
       ],
     );

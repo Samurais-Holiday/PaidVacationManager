@@ -207,12 +207,6 @@ class PaidVacationRepository {
           key: '${Keys.acquisitionHourly}${Keys.splitChar}$givenDate${Keys.splitChar}${acquisition.date}',
           value: '${acquisition.duration.hours()}${Keys.splitChar}${acquisition.description}');
 
-  /// 有給取得情報更新
-  Future<void> updateAcquisition({required Date givenDate, required Acquisition before, required Acquisition after}) async {
-    await deleteAcquisition(givenDate: givenDate, acquisition: before);
-    await writeAcquisition(givenDate: givenDate, acquisition: after);
-  }
-
   /// 有給情報削除
   Future<void> deletePaidVacation(PaidVacation vacation) async {
     await deleteGivenDays(vacation.givenDays);
