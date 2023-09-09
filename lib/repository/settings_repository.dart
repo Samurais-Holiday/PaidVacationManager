@@ -9,6 +9,30 @@ class SettingsRepository {
   /// コンストラクタ
   SettingsRepository({required Repository repository}) : _repository = repository;
 
+  /// 所定労働時間読み込み
+  Future<int> readWorkingHours() async {
+    final hours = await _repository.read(Keys.workingHours);
+    return hours != null
+        ? int.tryParse(hours) ?? 8
+        : 8;
+  }
+
+  /// 所定労働時間書き込み
+  Future<void> writeWorkingHours(int hours)
+      => _repository.write(key: Keys.workingHours, value: '$hours');
+
+  /// 有効期間読み込み
+  Future<int> readValidYears() async {
+    final years = await _repository.read(Keys.validYears);
+    return years != null
+        ? int.tryParse(years) ?? 2
+        : 2;
+  }
+
+  /// 有効期間書き込み
+  Future<void> writeValidYears(int years)
+      => _repository.write(key: Keys.validYears, value: '$years');
+
   /// GoogleCalendar同期設定読み込み
   Future<bool> readIsSyncGoogleCalendar() async {
     final isSync = await _repository.read(Keys.isSyncGoogleCalendar);

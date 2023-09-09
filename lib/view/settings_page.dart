@@ -11,8 +11,6 @@ import 'component/ad_banner.dart';
 import 'component/dialogs.dart';
 
 /// 設定画面
-/// * TODO: 所定労働時間の設定
-/// * TODO: 有効期間の設定
 class SettingsPage extends StatefulWidget {
   /// 各種設定
   final Settings _settings;
@@ -30,6 +28,10 @@ class _SettingsPageState extends State<SettingsPage> {
   late InAppPurchaseService _inAppPurchase;
   /// 処理中か
   bool _isPending;
+  /// 所定労働時間 選択肢
+  static final List<int> _workingHoursValues = [1, 2, 3, 4, 5, 6, 7, 8];
+  /// 有効期間 選択肢
+  static final List<int> _validYearsValues = [2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 40];
   /// 広告削除の値段
   String? _hideAdPrice;
 
@@ -75,7 +77,6 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.background,
         appBar: AppBar(
           title: const Text('設定'),
         ),
@@ -96,11 +97,67 @@ class _SettingsPageState extends State<SettingsPage> {
       children: [
         if (!widget._settings.hideAd)
           const AdBannerWidget(),
+        _workingHours(),
+        _validYears(),
         if (!widget._settings.hideAd)
           _adVisible(),
         _syncGoogleCalendar(),
       ],
     );
+  }
+
+  /// 所定労働時間設定
+  Widget _workingHours() {
+    return ListTile(
+      leading: const Icon(Icons.watch_later),
+      title: Text('所定労働時間(切り上げ)', style: Theme.of(context).textTheme.titleMedium,),
+      trailing: DropdownButton<int>(
+        value: widget._settings.workingHours,
+        items: _createDropdownItems(_workingHoursValues, suffix: '時間'),
+        onChanged: (int? value) {
+          if (value == null) {
+            return;
+          }
+          setState(() {
+            widget._settings.workingHours = value;
+          });
+        },
+        dropdownColor: Theme.of(context).scaffoldBackgroundColor,
+      ),
+    );
+  }
+
+  /// 有効期間設定
+  Widget _validYears() {
+    return ListTile(
+      leading: const Icon(Icons.calendar_month),
+      title: Text('有効期間', style: Theme.of(context).textTheme.titleLarge,),
+      trailing: DropdownButton<int>(
+        value: widget._settings.validYears,
+        items: _createDropdownItems(_validYearsValues, suffix: '年'),
+        onChanged: (int? value) {
+          if (value == null) {
+            return;
+          }
+          setState(() {
+            widget._settings.validYears = value;
+          });
+        },
+        dropdownColor: Theme.of(context).scaffoldBackgroundColor,
+      ),
+    );
+  }
+
+  /// ドロップダウン選択肢アイテム生成
+  List<DropdownMenuItem<T>> _createDropdownItems<T>(List<T> values, {required String suffix}) {
+    List<DropdownMenuItem<T>> items = [];
+    for (final value in values) {
+      items.add(DropdownMenuItem<T>(
+          value: value,
+          child: Text('$value $suffix', style: Theme.of(context).textTheme.titleLarge,),
+      ));
+    }
+    return items;
   }
 
   /// 広告非表示設定
@@ -110,7 +167,7 @@ class _SettingsPageState extends State<SettingsPage> {
         secondary: const Icon(Icons.hide_image),
         title: Text(
             '広告を非表示にする${_hideAdPrice != null ? ' ($_hideAdPrice)' : ''}',
-            style: Theme.of(context).textTheme.titleLarge,
+            style: Theme.of(context).textTheme.titleMedium,
         ),
         value: widget._settings.hideAd,
         onChanged: (hideAd) {

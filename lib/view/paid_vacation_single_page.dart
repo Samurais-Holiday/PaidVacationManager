@@ -66,7 +66,7 @@ class _PaidVacationSinglePageState extends State<PaidVacationSinglePage> {
               title: '編集',
               before: widget._paidVacation.givenDays,
               firstDate: lastDate != null
-                  ? Date(lastDate.year - 2, lastDate.month, lastDate.day)
+                  ? Date(lastDate.year - widget._settings.validYears, lastDate.month, lastDate.day).add(const Duration(days: 1))
                   : Date(Date.today().year - 40),
               lastDate: firstDate ?? Date(Date.today().year + 10),
               acceptText: '保存',
@@ -88,7 +88,7 @@ class _PaidVacationSinglePageState extends State<PaidVacationSinglePage> {
       Dialogs.showError(context: context, errorCode: ErrorCode.alreadyExists);
       return false;
     }
-    final result = widget._paidVacation.setGivenDays(after, validYears: 2);
+    final result = widget._paidVacation.setGivenDays(after, validYears: widget._settings.validYears);
     if (result != ErrorCode.noError) {
       Dialogs.showError(context: context, errorCode: result);
       return false;
@@ -163,7 +163,7 @@ class _PaidVacationSinglePageState extends State<PaidVacationSinglePage> {
   /// 有効期間
   Widget _period() {
     final givenDate = widget._paidVacation.givenDays.start;
-    final endDate = Date(givenDate.year + widget._settings.validYears, givenDate.month, givenDate.day);
+    final endDate = Date(givenDate.year + widget._settings.validYears, givenDate.month, givenDate.day).subtract(const Duration(days: 1));
     return Text(
       '${givenDate.year}/${givenDate.month}/${givenDate.day} ~ ${endDate.year}/${endDate.month}/${endDate.day}',
       style: Theme.of(context).textTheme.headlineSmall,
@@ -238,6 +238,7 @@ class _PaidVacationSinglePageState extends State<PaidVacationSinglePage> {
 
   /// 取得情報一覧
   Widget _acquisitionList() {
+    final givenDate = widget._paidVacation.givenDays.start;
     return DismissibleListView.builder<Acquisition>(
       context: context,
       items: widget._paidVacation.acquisitionList,
@@ -251,8 +252,8 @@ class _PaidVacationSinglePageState extends State<PaidVacationSinglePage> {
                 MaterialPageRoute(builder: (_) => AcquisitionSinglePage(
                   title: '編集',
                   before: current,
-                  first: widget._paidVacation.givenDays.start,
-                  last: Date(widget._paidVacation.givenDays.start.year + 2),
+                  first: givenDate,
+                  last: Date(givenDate.year + widget._settings.validYears, givenDate.month, givenDate.day).subtract(const Duration(days: 1)),
                   settings: widget._settings,
                   acceptText: '保存',
                   onAccepted: _onEdited,
@@ -281,7 +282,7 @@ class _PaidVacationSinglePageState extends State<PaidVacationSinglePage> {
         before: before,
         after: after,
         workingHours: widget._settings.workingHours,
-        validYears: 2
+        validYears: widget._settings.validYears
     );
     if (result != ErrorCode.noError) {
       Dialogs.showError(context: context, errorCode: result);
@@ -297,6 +298,7 @@ class _PaidVacationSinglePageState extends State<PaidVacationSinglePage> {
 
   /// 有給取得ボタン
   Widget _addButton() {
+    final givenDate = widget._paidVacation.givenDays.start;
     return FloatingActionButton.extended(
       icon: const Icon(Icons.add),
       label: const Text('休む!'),
@@ -305,8 +307,8 @@ class _PaidVacationSinglePageState extends State<PaidVacationSinglePage> {
             context,
             MaterialPageRoute(builder: (_) => AcquisitionSinglePage(
               title: '有給取得',
-              first: widget._paidVacation.givenDays.start,
-              last: Date(widget._paidVacation.givenDays.start.year + 2),
+              first: givenDate,
+              last: Date(givenDate.year + widget._settings.validYears, givenDate.month, givenDate.day).subtract(const Duration(days: 1)),
               settings: widget._settings,
               acceptText: '取得',
               onAccepted: _onAcquired,
@@ -322,7 +324,7 @@ class _PaidVacationSinglePageState extends State<PaidVacationSinglePage> {
     final result = widget._paidVacation.addAcquisition(
         entry: after,
         workingHours: widget._settings.workingHours,
-        validYears: 2
+        validYears: widget._settings.validYears
     );
     if (result != ErrorCode.noError) {
       Dialogs.showError(context: context, errorCode: result);

@@ -11,7 +11,9 @@ class Settings {
   /// リポジトリ
   final Repository _repository;
   /// 所定労働時間
-  final num _workingHours;
+  int _workingHours;
+  /// 有効期間
+  int _validYears;
   /// 広告非表示設定
   bool _hideAd;
   /// 前回のレビュー依頼日
@@ -22,6 +24,7 @@ class Settings {
   /// コンストラクタ
   Settings({required Repository repository})
       : _repository = repository,
+        _validYears = 2,
         _workingHours = 8,
         _hideAd = false,
         _calendarSync = {};
@@ -29,6 +32,8 @@ class Settings {
   /// 読み込み
   Future<void> load() async {
     final settingsRepository = SettingsRepository(repository: _repository);
+    _workingHours = await settingsRepository.readWorkingHours();
+    _validYears = await settingsRepository.readValidYears();
     _hideAd = await settingsRepository.readHideAd();
     _latestReviewRequest = await settingsRepository.readLatestReviewRequest();
     if (await settingsRepository.readIsSyncGoogleCalendar()) {
@@ -37,10 +42,24 @@ class Settings {
   }
 
   /// 所定労働時間
-  num get workingHours => _workingHours;
+  int get workingHours => _workingHours;
+
+  /// 所定労働時間設定
+  set workingHours(int hours) {
+    final settingsRepository = SettingsRepository(repository: _repository);
+    settingsRepository.writeWorkingHours(hours);
+    _workingHours = hours;
+  }
 
   /// 有効期間
-  int get validYears => 2;
+  int get validYears => _validYears;
+
+  /// 有効期間設定
+  set validYears(int years) {
+    final settingsRepository = SettingsRepository(repository: _repository);
+    settingsRepository.writeValidYears(years);
+    _validYears = years;
+  }
 
   /// 広告非表示設定取得
   bool get hideAd => _hideAd;

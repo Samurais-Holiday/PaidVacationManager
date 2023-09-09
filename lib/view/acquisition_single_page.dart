@@ -266,7 +266,7 @@ class _AcquisitionSinglePageState extends State<AcquisitionSinglePage> {
           context: context,
           value: _hours,
           start: 0,
-          end: 8,
+          end: widget._settings.workingHours,
           onChanged: (int hours) {
             setState(() => _hours = hours);
           },

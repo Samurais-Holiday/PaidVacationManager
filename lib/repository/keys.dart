@@ -8,6 +8,11 @@ class Keys {
   static const acquisitionHalf = 'AcquisitionHalfInfo';
   /// 時間単位取得情報
   static const acquisitionHourly = 'acquisitionHourInfo';
+
+  /// 所定労働時間
+  static const workingHours = 'WorkingHours';
+  /// 有効期間
+  static const validYears = 'ValidYears';
   /// GoogleCalendar同期設定
   static const isSyncGoogleCalendar = 'IsSyncGoogleCalendar';
   /// GoogleCalendarイベントID
