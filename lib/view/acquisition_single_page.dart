@@ -55,8 +55,6 @@ enum _AcquisitionType {
 class _AcquisitionSinglePageState extends State<AcquisitionSinglePage> {
   /// 取得日
   Date _date;
-  /// 取得日(ラベル用)
-  final TextEditingController _dateLabel;
   /// 有給種別
   _AcquisitionType _type;
   /// 午前/午後
@@ -69,7 +67,6 @@ class _AcquisitionSinglePageState extends State<AcquisitionSinglePage> {
   /// コンストラクタ
   _AcquisitionSinglePageState()
       : _date = Date.today(),
-        _dateLabel = TextEditingController(text: '${Date.today().year} 年 ${Date.today().month} 月 ${Date.today().day} 日 (${Date.today().weekdayText})'),
         _type = _AcquisitionType.day,
         _amPm = AmPm.am,
         _hours = 1,
@@ -85,10 +82,10 @@ class _AcquisitionSinglePageState extends State<AcquisitionSinglePage> {
   void _setFieldParameter() {
     final before = widget._before;
     if (before == null) {
+      _date = widget._first.isBefore(_date) ? _date : widget._first;
       return;
     }
     _date = before.date;
-    _dateLabel.text = '${_date.year} 年 ${_date.month} 月 ${_date.day} 日 (${_date.weekdayText})';
     _description.text = before.description;
     if (before is AcquisitionHalf) {
       _type = _AcquisitionType.half;
