@@ -26,8 +26,8 @@ abstract class Acquisition implements Comparable<Acquisition> {
   /// 表示タイトル
   String get title
       => subTitle() != null
-          ? '${date.year}/${date.month}/${date.day} (${date.weekdayText}) (${subTitle()})'
-          : '${date.year}/${date.month}/${date.day} (${date.weekdayText})';
+          ? '${date.year}/${'${date.month}'.padLeft(2, '0')}/${'${date.day}'.padLeft(2, '0')} (${date.weekdayText}) (${subTitle()})'
+          : '${date.year}/${'${date.month}'.padLeft(2, '0')}/${'${date.day}'.padLeft(2, '0')} (${date.weekdayText})';
 
   /// サブタイトル
   String? subTitle() => null;

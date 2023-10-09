@@ -165,7 +165,7 @@ class _PaidVacationSinglePageState extends State<PaidVacationSinglePage> {
     final givenDate = widget._paidVacation.givenDays.start;
     final endDate = Date(givenDate.year + widget._settings.validYears, givenDate.month, givenDate.day).subtract(const Duration(days: 1));
     return Text(
-      '${givenDate.year}/${givenDate.month}/${givenDate.day} ~ ${endDate.year}/${endDate.month}/${endDate.day}',
+      '${givenDate.year}/${'${givenDate.month}'.padLeft(2, '0')}/${'${givenDate.day}'.padLeft(2, '0')} ~ ${endDate.year}/${'${endDate.month}'.padLeft(2, '0')}/${'${endDate.day}'.padLeft(2, '0')}',
       style: Theme.of(context).textTheme.headlineSmall,
     );
   }

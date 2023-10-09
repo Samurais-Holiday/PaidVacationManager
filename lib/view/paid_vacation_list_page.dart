@@ -67,7 +67,7 @@ class PaidVacationListPageState extends State<PaidVacationListPage> {
         final remainingDays = PaidDuration(days: current.givenDays.days) - current.acquisitionDuration;
         return ListTile(
           title: Text(
-            '${current.givenDays.start.year}/${current.givenDays.start.month}/${current.givenDays.start.day} ~',
+            '${current.givenDays.start.year}/${'${current.givenDays.start.month}'.padLeft(2, '0')}/${'${current.givenDays.start.day}'.padLeft(2, '0')} ~',
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           subtitle: Text(
