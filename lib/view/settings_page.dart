@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:flutter/foundation.dart';
 
 import '../model/purchase_item.dart';
 import '../model/settings.dart';
@@ -99,7 +100,7 @@ class _SettingsPageState extends State<SettingsPage> {
           const AdBannerWidget(),
         _workingHours(),
         _validYears(),
-        if (!widget._settings.hideAd)
+        if (!widget._settings.hideAd || kDebugMode)
           _adVisible(),
         _syncGoogleCalendar(),
       ],
@@ -172,6 +173,11 @@ class _SettingsPageState extends State<SettingsPage> {
         value: widget._settings.hideAd,
         onChanged: (hideAd) {
           if (!hideAd) {
+            if (kDebugMode) {
+              setState(() {
+                widget._settings.hideAd = false;
+              });
+            }
             return;
           }
           _inAppPurchase.requestBuyConsumable(PurchaseProductType.hideAd).then((bool isSuccess) {
